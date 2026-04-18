@@ -25,7 +25,7 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessOutputTypes;
-import com.intellij.ide.scratch.ScratchFileType;
+import com.intellij.ide.scratch.ScratchUtil;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.project.Project;
@@ -84,7 +84,7 @@ public class GoRunUtil {
     FileIndexFacade indexFacade = FileIndexFacade.getInstance(psiElement.getProject());
     PsiFileSystemItem psiFile = psiElement instanceof PsiFileSystemItem ? (PsiFileSystemItem)psiElement : psiElement.getContainingFile();
     VirtualFile file = psiFile != null ? psiFile.getVirtualFile() : null;
-    if (file != null && file.getFileType() != ScratchFileType.INSTANCE && 
+    if (file != null && !ScratchUtil.isScratch(file) && 
         (!indexFacade.isInContent(file) || indexFacade.isExcludedFile(file))) {
       return null;
     }
@@ -138,7 +138,7 @@ public class GoRunUtil {
       //noinspection unchecked
       field.addBrowseFolderListener(project, new ComponentWithBrowseButton.BrowseFolderActionListener(null, null, field, project,
                                                                                                       chooseDirectoryDescriptor,
-                                                                                                      TextComponentAccessor.TEXT_FIELD_WITH_HISTORY_WHOLE_TEXT));
+                                                                                                      TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT));
     }
   }
 

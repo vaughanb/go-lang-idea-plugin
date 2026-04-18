@@ -27,7 +27,7 @@ import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SmartList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -142,7 +142,7 @@ public class GoHighlightingAnnotator implements Annotator {
       synchronized (o) {
         List<PsiElement> importUsers = o.getUserData(GoReferenceBase.IMPORT_USERS);
         if (importUsers != null) {
-          List<PsiElement> newImportUsers = ContainerUtil.newSmartList();
+          List<PsiElement> newImportUsers = new SmartList<>();
           newImportUsers.addAll(importUsers.stream().filter(PsiElement::isValid).collect(Collectors.toList()));
           o.putUserData(GoReferenceBase.IMPORT_USERS, newImportUsers.isEmpty() ? null : newImportUsers);
         }

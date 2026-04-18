@@ -20,10 +20,10 @@ import com.goide.psi.*;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class GoDuplicateArgumentInspection extends GoInspectionBase {
@@ -42,7 +42,7 @@ public class GoDuplicateArgumentInspection extends GoInspectionBase {
 
   protected void check(@Nullable GoSignature o, @NotNull ProblemsHolder holder) {
     if (o != null) {
-      checkParameters(holder, o.getParameters(), ContainerUtil.newLinkedHashSet());
+      checkParameters(holder, o.getParameters(), new LinkedHashSet<>());
     }
   }
 

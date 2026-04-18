@@ -24,6 +24,7 @@ import com.intellij.xdebugger.frame.XSuspendContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class DlvSuspendContext extends XSuspendContext {
@@ -62,7 +63,7 @@ class DlvSuspendContext extends XSuspendContext {
       myProcess = process;
       myLocations = locations;
       myProcessor = processor;
-      myStack = ContainerUtil.newArrayListWithCapacity(locations.size());
+      myStack = new ArrayList<>(locations.size());
       for (int i = 0; i < myLocations.size(); i++) {
         myStack.add(new DlvStackFrame(myProcess, myLocations.get(i), myProcessor, i));
       }

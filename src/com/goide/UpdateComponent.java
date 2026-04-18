@@ -18,20 +18,16 @@ package com.goide;
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PermanentInstallationID;
-import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.event.EditorFactoryAdapter;
 import com.intellij.openapi.editor.event.EditorFactoryEvent;
+import com.intellij.openapi.editor.event.EditorFactoryListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
-import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.io.HttpRequests;
 import org.jdom.JDOMException;
@@ -40,28 +36,21 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static com.goide.util.GoUtil.getPlugin;
 
-public class UpdateComponent implements ApplicationComponent, Disposable {
+public class UpdateComponent implements EditorFactoryListener {
   private static final Logger LOG = Logger.getInstance(UpdateComponent.class);
   private static final String KEY = "go.last.update.timestamp";
-  private final EditorFactoryAdapter myListener = new EditorFactoryAdapter() {
-    @Override
-    public void editorCreated(@NotNull EditorFactoryEvent event) {
-      Document document = event.getEditor().getDocument();
-      VirtualFile file = FileDocumentManager.getInstance().getFile(document);
-      if (file != null && file.getFileType() == GoFileType.INSTANCE) {
-        checkForUpdates();
-      }
-    }
-  };
 
   @Override
-  public void initComponent() {
-    if (!ApplicationManager.getApplication().isUnitTestMode()) {
-      EditorFactory.getInstance().addEditorFactoryListener(myListener, this);
+  public void editorCreated(@NotNull EditorFactoryEvent event) {
+    Document document = event.getEditor().getDocument();
+    VirtualFile file = FileDocumentManager.getInstance().getFile(document);
+    if (file != null && file.getFileType() == GoFileType.INSTANCE) {
+      checkForUpdates();
     }
   }
 
@@ -75,7 +64,7 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
           IdeaPluginDescriptor plugin = getPlugin();
           String pluginVersion = plugin.getVersion();
           String pluginId = plugin.getPluginId().getIdString();
-          String os = URLEncoder.encode(SystemInfo.OS_NAME + " " + SystemInfo.OS_VERSION, CharsetToolkit.UTF8);
+          String os = URLEncoder.encode(SystemInfo.OS_NAME + " " + SystemInfo.OS_VERSION, StandardCharsets.UTF_8);
           String uid = PermanentInstallationID.get();
           String url =
             "https://plugins.jetbrains.com/plugins/list" +
@@ -89,7 +78,7 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
             request -> {
               try {
                 JDOMUtil.load(request.getReader());
-                LOG.info((request.isSuccessful() ? "Successful" : "Unsuccessful") + " update: " + url);
+                LOG.info("Update check completed: " + url);
               }
               catch (JDOMException e) {
                 LOG.warn(e);
@@ -105,20 +94,5 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
         }
       });
     }
-  }
-
-  @Override
-  public void disposeComponent() {
-  }
-
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return getClass().getName();
-  }
-
-  @Override
-  public void dispose() {
-    disposeComponent();
   }
 }

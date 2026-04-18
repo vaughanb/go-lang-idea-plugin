@@ -34,13 +34,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.PairConsumer;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -117,7 +117,7 @@ public class GoFmtCheckinFactory extends CheckinHandlerFactory {
       @NotNull
       private List<PsiFile> getPsiFiles() {
         Collection<VirtualFile> files = panel.getVirtualFiles();
-        List<PsiFile> psiFiles = ContainerUtil.newArrayList();
+        List<PsiFile> psiFiles = new ArrayList<>();
         PsiManager manager = PsiManager.getInstance(panel.getProject());
         for (VirtualFile file : files) {
           PsiFile psiFile = manager.findFile(file);

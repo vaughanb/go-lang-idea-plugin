@@ -29,6 +29,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 
 public class GobenchRunningState extends GoTestRunningState {
   public GobenchRunningState(ExecutionEnvironment env, Module module, GoTestRunConfiguration configuration) {
@@ -38,7 +39,7 @@ public class GobenchRunningState extends GoTestRunningState {
   @NotNull
   @Override
   protected String buildFilterPatternForFile(GoFile file) {
-    Collection<String> benchmarkNames = ContainerUtil.newLinkedHashSet();
+    Collection<String> benchmarkNames = new LinkedHashSet<>();
     for (GoFunctionDeclaration function : file.getFunctions()) {
       ContainerUtil.addIfNotNull(benchmarkNames, GoTestFinder.isBenchmarkFunction(function) ? function.getName() : null);
     }

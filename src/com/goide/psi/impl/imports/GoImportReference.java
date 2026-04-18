@@ -29,13 +29,10 @@ import com.intellij.psi.impl.source.resolve.reference.impl.providers.FileReferen
 import com.intellij.psi.impl.source.resolve.reference.impl.providers.FileReferenceSet;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class GoImportReference extends FileReference {
   public GoImportReference(@NotNull FileReferenceSet fileReferenceSet, TextRange range, int index, String text) {
@@ -66,8 +63,8 @@ public class GoImportReference extends FileReference {
     }
 
     String referenceText = getText();
-    Set<ResolveResult> result = ContainerUtil.newLinkedHashSet();
-    Set<ResolveResult> innerResult = ContainerUtil.newLinkedHashSet();
+    Set<ResolveResult> result = new LinkedHashSet<>();
+    Set<ResolveResult> innerResult = new LinkedHashSet<>();
     for (PsiFileSystemItem context : getContexts()) {
       innerResolveInContext(referenceText, context, innerResult, caseSensitive);
       for (ResolveResult resolveResult : innerResult) {
@@ -126,7 +123,7 @@ public class GoImportReference extends FileReference {
       return new LocalQuickFix[]{new GoDeleteImportQuickFix()};
     }
 
-    List<LocalQuickFix> result = ContainerUtil.newArrayList();
+    List<LocalQuickFix> result = new ArrayList<>();
     FileReferenceSet fileReferenceSet = getFileReferenceSet();
     if (fileReferenceSet instanceof GoImportReferenceSet && !((GoImportReferenceSet)fileReferenceSet).isRelativeImport()
         && !fileReferenceSet.isAbsolutePathReference()) {

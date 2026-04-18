@@ -53,13 +53,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 public class GoExecutor {
   private static final Logger LOGGER = Logger.getInstance(GoExecutor.class);
-  @NotNull private final Map<String, String> myExtraEnvironment = ContainerUtil.newHashMap();
+  @NotNull private final Map<String, String> myExtraEnvironment = new HashMap<>();
   @NotNull private final ParametersList myParameterList = new ParametersList();
   @NotNull private final ProcessOutput myProcessOutput = new ProcessOutput();
   @NotNull private final Project myProject;
@@ -78,7 +76,7 @@ public class GoExecutor {
   @Nullable private String myExePath;
   @Nullable private String myPresentableName;
   private OSProcessHandler myProcessHandler;
-  private final Collection<ProcessListener> myProcessListeners = ContainerUtil.newArrayList();
+  private final Collection<ProcessListener> myProcessListeners = new ArrayList<>();
 
   private GoExecutor(@NotNull Project project, @Nullable Module module) {
     myProject = project;
@@ -274,8 +272,7 @@ public class GoExecutor {
   }
 
   public void executeWithProgress(boolean modal) {
-    //noinspection unchecked
-    executeWithProgress(modal, Consumer.EMPTY_CONSUMER);
+    executeWithProgress(modal, b -> {});
   }
 
   public void executeWithProgress(boolean modal, @NotNull Consumer<Boolean> consumer) {
@@ -320,7 +317,11 @@ public class GoExecutor {
   private void showNotification(@NotNull String message, NotificationType type) {
     ApplicationManager.getApplication().invokeLater(() -> {
       String title = getPresentableName();
-      Notifications.Bus.notify(GoConstants.GO_EXECUTION_NOTIFICATION_GROUP.createNotification(title, message, type, null), myProject);
+      Notifications.Bus.notify(
+        com.intellij.notification.NotificationGroupManager.getInstance()
+          .getNotificationGroup(GoConstants.GO_EXECUTION_NOTIFICATION_GROUP_ID)
+          .createNotification(title, message, type),
+        myProject);
     });
   }
 
@@ -355,7 +356,7 @@ public class GoExecutor {
       commandLine.getEnvironment().put(GoConstants.GO_VENDORING_EXPERIMENT, myVendoringEnabled ? "1" : "0");
     }
 
-    Collection<String> paths = ContainerUtil.newArrayList();
+    Collection<String> paths = new ArrayList<>();
     ContainerUtil.addIfNotNull(paths, StringUtil.nullize(commandLine.getEnvironment().get(GoConstants.PATH), true));
     ContainerUtil.addIfNotNull(paths, StringUtil.nullize(EnvironmentUtil.getValue(GoConstants.PATH), true));
     ContainerUtil.addIfNotNull(paths, StringUtil.nullize(myEnvPath, true));

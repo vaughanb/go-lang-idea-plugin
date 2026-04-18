@@ -58,6 +58,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -736,7 +737,7 @@ public class GoPsiImplUtil {
         GoParameters parameters = result.getParameters();
         if (parameters != null) {
           List<GoParameterDeclaration> list = parameters.getParameterDeclarationList();
-          List<GoType> types = ContainerUtil.newArrayListWithCapacity(list.size());
+          List<GoType> types = new ArrayList<>(list.size());
           for (GoParameterDeclaration declaration : list) {
             GoType declarationType = declaration.getType();
             for (GoParamDefinition ignored : declaration.getParamDefinitionList()) {
@@ -836,7 +837,7 @@ public class GoPsiImplUtil {
 
   @NotNull
   public static List<GoTypeReferenceExpression> getBaseTypesReferences(@NotNull GoInterfaceType o) {
-    List<GoTypeReferenceExpression> refs = ContainerUtil.newArrayList();
+    List<GoTypeReferenceExpression> refs = new ArrayList<>();
     o.accept(new GoRecursiveVisitor() {
       @Override
       public void visitMethodSpec(@NotNull GoMethodSpec o) {
@@ -885,8 +886,7 @@ public class GoPsiImplUtil {
                                       @NotNull ResolveState state,
                                       @NotNull Collection<? extends GoNamedElement> elements,
                                       boolean localResolve) {
-    //noinspection unchecked
-    return processNamedElements(processor, state, elements, Condition.TRUE, localResolve, false);
+    return processNamedElements(processor, state, elements, t -> true, localResolve, false);
   }
 
   static boolean processNamedElements(@NotNull PsiScopeProcessor processor,
@@ -894,8 +894,7 @@ public class GoPsiImplUtil {
                                       @NotNull Collection<? extends GoNamedElement> elements,
                                       boolean localResolve,
                                       boolean checkContainingFile) {
-    //noinspection unchecked
-    return processNamedElements(processor, state, elements, Condition.TRUE, localResolve, checkContainingFile);
+    return processNamedElements(processor, state, elements, t -> true, localResolve, checkContainingFile);
   }
 
   static boolean processNamedElements(@NotNull PsiScopeProcessor processor,
@@ -953,7 +952,7 @@ public class GoPsiImplUtil {
       Project project = ((GoFile)file).getProject();
       GlobalSearchScope scope = GoPackageUtil.packageScope((GoFile)file);
       Collection<GoMethodDeclaration> declarations = GoMethodIndex.find(key, project, scope, GoIdFilter.getFilesFilter(scope));
-      return ContainerUtil.newArrayList(declarations);
+      return new ArrayList<>(declarations);
     }
     return Collections.emptyList();
   }
@@ -1008,7 +1007,7 @@ public class GoPsiImplUtil {
       if (parameters != null) {
         GoType parametersType = parameters.getType();
         if (parametersType != null) return parametersType;
-        List<GoType> composite = ContainerUtil.newArrayList();
+        List<GoType> composite = new ArrayList<>();
         for (GoParameterDeclaration p : parameters.getParameterDeclarationList()) {
           for (GoParamDefinition definition : p.getParamDefinitionList()) {
             composite.add(definition.getGoType(context));

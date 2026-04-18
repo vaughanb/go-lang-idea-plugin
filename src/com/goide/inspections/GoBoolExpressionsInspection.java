@@ -25,7 +25,7 @@ import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SmartList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -89,7 +89,7 @@ public class GoBoolExpressionsInspection extends GoInspectionBase {
 
   @NotNull
   public static List<GoExpression> collect(GoBinaryExpr o, boolean and) {
-    List<GoExpression> result = ContainerUtil.newSmartList();
+    List<GoExpression> result = new SmartList<>();
     result.addAll(processExpr(o.getLeft(), and));
     result.addAll(processExpr(o.getRight(), and));
     return result;
@@ -97,7 +97,7 @@ public class GoBoolExpressionsInspection extends GoInspectionBase {
 
   @NotNull
   private static List<GoExpression> processExpr(@Nullable GoExpression e, boolean and) {
-    if (e == null) return ContainerUtil.emptyList();
+    if (e == null) return Collections.emptyList();
     if (isSameOp(e, and)) {
       return collect((GoBinaryExpr)e, and);
     }

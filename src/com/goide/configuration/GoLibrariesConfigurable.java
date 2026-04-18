@@ -42,6 +42,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -224,7 +225,7 @@ public class GoLibrariesConfigurable implements SearchableConfigurable, Configur
 
   @NotNull
   private Collection<String> getUserDefinedUrls() {
-    Collection<String> libraryUrls = ContainerUtil.newArrayList();
+    Collection<String> libraryUrls = new ArrayList<>();
     for (ListItem item : myListModel.getItems()) {
       if (!item.readOnly) {
         libraryUrls.add(item.url);

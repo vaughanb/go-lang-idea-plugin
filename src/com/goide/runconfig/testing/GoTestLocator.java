@@ -31,6 +31,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.IdFilter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class GoTestLocator implements SMTestLocator {
 
       // Location is a method name, e.g. `FooSuite.TestCheckItOut`
       if (locationDataItems.size() == 2) {
-        List<Location> locations = ContainerUtil.newArrayList();
+        List<Location> locations = new ArrayList<>();
         for (GoTypeSpec typeSpec : GoTypesIndex.find(locationDataItems.get(0), project, scope, idFilter)) {
           for (GoMethodDeclaration method : typeSpec.getMethods()) {
             if (locationDataItems.get(1).equals(method.getName())) {

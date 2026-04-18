@@ -24,9 +24,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleServiceManager;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
@@ -37,21 +35,21 @@ import com.intellij.util.xmlb.annotations.OptionTag;
 import com.intellij.util.xmlb.annotations.Property;
 import org.jetbrains.annotations.NotNull;
 
-@State(name = GoConstants.GO_MODULE_SESTTINGS_SERVICE_NAME, storages = @Storage(file = StoragePathMacros.MODULE_FILE))
+@State(name = GoConstants.GO_MODULE_SESTTINGS_SERVICE_NAME, storages = @Storage("goModuleSettings.xml"))
 public class GoModuleSettings implements PersistentStateComponent<GoModuleSettings.GoModuleSettingsState> {
   public static final Topic<BuildTargetListener> TOPIC = Topic.create("build target changed", BuildTargetListener.class);
 
   @NotNull
   private final GoModuleSettingsState myState = new GoModuleSettingsState();
   @NotNull
-  private final Module myModule;
+  private final Project myProject;
 
-  public GoModuleSettings(@NotNull Module module) {
-    myModule = module;
+  public GoModuleSettings(@NotNull Project project) {
+    myProject = project;
   }
 
   public static GoModuleSettings getInstance(@NotNull Module module) {
-    return ModuleServiceManager.getService(module, GoModuleSettings.class);
+    return module.getProject().getService(GoModuleSettings.class);
   }
 
   @NotNull
@@ -74,8 +72,8 @@ public class GoModuleSettings implements PersistentStateComponent<GoModuleSettin
   public void setBuildTargetSettings(@NotNull GoBuildTargetSettings buildTargetSettings) {
     if (!buildTargetSettings.equals(myState.buildTargetSettings)) {
       XmlSerializerUtil.copyBean(buildTargetSettings, myState.buildTargetSettings);
-      if (!myModule.isDisposed()) {
-        myModule.getProject().getMessageBus().syncPublisher(TOPIC).changed(myModule);
+      if (!myProject.isDisposed()) {
+        myProject.getMessageBus().syncPublisher(TOPIC).changed(null);
       }
       cleanResolveCaches();
       myState.buildTargetSettings.incModificationCount();
@@ -83,7 +81,7 @@ public class GoModuleSettings implements PersistentStateComponent<GoModuleSettin
   }
 
   private void cleanResolveCaches() {
-    Project project = myModule.getProject();
+    Project project = myProject;
     if (!project.isDisposed()) {
       ResolveCache.getInstance(project).clearCache(true);
       DaemonCodeAnalyzer.getInstance(project).restart();

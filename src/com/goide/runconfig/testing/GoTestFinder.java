@@ -28,7 +28,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil;
 import com.intellij.testIntegration.TestFinder;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SmartList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,7 +48,7 @@ public class GoTestFinder implements TestFinder {
 
   public static boolean isTestOrExampleFunction(@NotNull GoFunctionOrMethodDeclaration function) {
     GoTestFunctionType type = GoTestFunctionType.fromName(function.getName());
-    return type == GoTestFunctionType.EXAMPLE || type == GoTestFunctionType.TEST;
+    return type == GoTestFunctionType.EXAMPLE || type == GoTestFunctionType.TEST || type == GoTestFunctionType.FUZZ;
   }
 
   public static boolean isBenchmarkFunction(@NotNull GoFunctionOrMethodDeclaration function) {
@@ -85,7 +85,7 @@ public class GoTestFinder implements TestFinder {
       PsiDirectory directory = file.getContainingDirectory();
       PsiFile testFile = directory.findFile(FileUtil.getNameWithoutExtension(file.getName()) + GoConstants.TEST_SUFFIX_WITH_EXTENSION);
       if (testFile != null) {
-        return ContainerUtil.newSmartList(testFile);
+        return new SmartList<>(testFile);
       }
     }
     return Collections.emptyList();
@@ -99,7 +99,7 @@ public class GoTestFinder implements TestFinder {
       PsiDirectory directory = testFile.getContainingDirectory();
       PsiFile sourceFile = directory.findFile(StringUtil.trimEnd(testFile.getName(), GoConstants.TEST_SUFFIX_WITH_EXTENSION) + EXTENSION);
       if (sourceFile != null) {
-        return ContainerUtil.newSmartList(sourceFile);
+        return new SmartList<>(sourceFile);
       }
     }
     return Collections.emptyList();

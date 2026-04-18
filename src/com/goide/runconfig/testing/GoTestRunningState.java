@@ -51,6 +51,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
@@ -141,7 +142,7 @@ public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
 
   @NotNull
   protected String buildFilterPatternForFile(GoFile file) {
-    Collection<String> testNames = ContainerUtil.newLinkedHashSet();
+    Collection<String> testNames = new LinkedHashSet<>();
     for (GoFunctionDeclaration function : file.getFunctions()) {
       ContainerUtil.addIfNotNull(testNames, GoTestFinder.isTestOrExampleFunction(function) ? function.getName() : null);
     }

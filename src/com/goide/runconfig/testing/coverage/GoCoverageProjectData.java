@@ -23,11 +23,12 @@ import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class GoCoverageProjectData extends ProjectData {
   @NotNull
-  private final Map<String, FileData> myFilesData = ContainerUtil.newHashMap();
+  private final Map<String, FileData> myFilesData = new HashMap<>();
 
   public void processFiles(@NotNull Processor<FileData> processor) {
     for (FileData fileData : myFilesData.values()) {
@@ -105,7 +106,7 @@ public class GoCoverageProjectData extends ProjectData {
     @NotNull
     public final String myFilePath;
     @NotNull
-    public final Map<String, RangeData> myRangesData = ContainerUtil.newHashMap();
+    public final Map<String, RangeData> myRangesData = new HashMap<>();
 
     public FileData(@NotNull String filePath) {
       myFilePath = filePath;

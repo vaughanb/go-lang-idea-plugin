@@ -30,6 +30,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -54,14 +55,14 @@ public class GoParameterInfoHandler implements ParameterInfoHandlerWithTabAction
 
   @NotNull
   @Override
-  public Set<Class> getArgumentListAllowedParentClasses() {
-    return ContainerUtil.newHashSet();
+  public Set<Class<?>> getArgumentListAllowedParentClasses() {
+    return new java.util.HashSet<>();
   }
 
   @NotNull
   @Override
-  public Set<Class> getArgListStopSearchClasses() {
-    return ContainerUtil.newHashSet();
+  public Set<Class<?>> getArgListStopSearchClasses() {
+    return new java.util.HashSet<>();
   }
 
   @NotNull
@@ -192,7 +193,7 @@ public class GoParameterInfoHandler implements ParameterInfoHandlerWithTabAction
   public static List<String> getParameterPresentations(@NotNull GoParameters parameters, 
                                                        @NotNull Function<PsiElement, String> typePresentationFunction) {
     List<GoParameterDeclaration> paramDeclarations = parameters.getParameterDeclarationList();
-    List<String> paramPresentations = ContainerUtil.newArrayListWithCapacity(2 * paramDeclarations.size());
+    List<String> paramPresentations = new ArrayList<>(2 * paramDeclarations.size());
     for (GoParameterDeclaration paramDeclaration : paramDeclarations) {
       boolean isVariadic = paramDeclaration.isVariadic();
       List<GoParamDefinition> paramDefinitionList = paramDeclaration.getParamDefinitionList();

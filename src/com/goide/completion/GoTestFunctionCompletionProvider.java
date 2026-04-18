@@ -50,6 +50,7 @@ import com.intellij.util.text.UniqueNameGenerator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 public class GoTestFunctionCompletionProvider extends CompletionProvider<CompletionParameters> {
@@ -75,7 +76,7 @@ public class GoTestFunctionCompletionProvider extends CompletionProvider<Complet
         });
       }
 
-      Collection<String> methodKeys = ContainerUtil.newTroveSet();
+      Collection<String> methodKeys = new HashSet<>();
       StubIndex.getInstance().processAllKeys(GoMethodIndex.KEY, new CancellableCollectProcessor<>(methodKeys), scope, idFilter);
       for (String key : methodKeys) {
         Processor<GoMethodDeclaration> processor = declaration -> {
@@ -125,7 +126,7 @@ public class GoTestFunctionCompletionProvider extends CompletionProvider<Complet
     GlobalSearchScope packageScope = GoPackageUtil.packageScope(directory, null);
     IdFilter packageIdFilter = GoIdFilter.getFilesFilter(packageScope);
     
-    Set<String> result = ContainerUtil.newHashSet();
+    Set<String> result = new HashSet<>();
     StubIndex.getInstance().processAllKeys(GoFunctionIndex.KEY, new CancellableCollectProcessor<String>(result) {
       @Override
       protected boolean accept(String s) {
@@ -137,7 +138,7 @@ public class GoTestFunctionCompletionProvider extends CompletionProvider<Complet
 
   @NotNull
   private static Set<String> collectAllTestNames(@NotNull Collection<String> names, @NotNull Project project, @NotNull GoFile file) {
-    Set<String> result = ContainerUtil.newHashSet();
+    Set<String> result = new HashSet<>();
     GlobalSearchScope packageScope = GoPackageUtil.packageScope(file);
     GlobalSearchScope scope = new GoUtil.TestsScope(packageScope);
     IdFilter idFilter = GoIdFilter.getFilesFilter(packageScope);

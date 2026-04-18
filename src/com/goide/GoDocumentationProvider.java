@@ -50,6 +50,7 @@ import com.intellij.xml.util.XmlStringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -83,9 +84,9 @@ public class GoDocumentationProvider extends AbstractDocumentationProvider {
   @NotNull
   private static List<PsiComment> getCommentsInner(@Nullable PsiElement element) {
     if (element == null) {
-      return ContainerUtil.emptyList();
+      return Collections.emptyList();
     }
-    List<PsiComment> result = ContainerUtil.newArrayList();
+    List<PsiComment> result = new ArrayList<>();
     PsiElement e;
     for (e = element.getPrevSibling(); e != null; e = e.getPrevSibling()) {
       if (e instanceof PsiWhiteSpace) {

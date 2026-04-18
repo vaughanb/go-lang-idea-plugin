@@ -22,13 +22,14 @@ import com.goide.quickfix.GoRenameQuickFix;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 public class GoReceiverNamesInspection extends GoInspectionBase {
-  private static final Set<String> genericNamesSet = ContainerUtil.newHashSet("me", "this", "self");
+  private static final Set<String> genericNamesSet = new HashSet<>(Arrays.asList("me", "this", "self"));
 
   @NotNull
   @Override

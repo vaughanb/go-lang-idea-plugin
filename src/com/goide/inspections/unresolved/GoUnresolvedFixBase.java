@@ -28,7 +28,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,7 +82,7 @@ public abstract class GoUnresolvedFixBase extends LocalQuickFixAndIntentionActio
     int start = anchor.getTextRange().getStartOffset();
     editor.getCaretModel().moveToOffset(start);
     template.setToReformat(true);
-    TemplateManager.getInstance(project).startTemplate(editor, template, true, ContainerUtil.stringMap("NAME", myName), null);
+    TemplateManager.getInstance(project).startTemplate(editor, template, true, java.util.Map.of("NAME", myName), null);
   }
 
   @Nullable

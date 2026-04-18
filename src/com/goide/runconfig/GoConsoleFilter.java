@@ -40,6 +40,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -78,7 +79,7 @@ public class GoConsoleFilter implements Filter {
     Matcher matcher = MESSAGE_PATTERN.matcher(line);
     if (!matcher.find()) {
       Matcher fileMatcher = GO_FILE_PATTERN.matcher(line);
-      List<ResultItem> resultItems = ContainerUtil.newArrayList();
+      List<ResultItem> resultItems = new ArrayList<>();
       while (fileMatcher.find()) {
         VirtualFile file = findSingleFile(fileMatcher.group(1));
         if (file != null) {

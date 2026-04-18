@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GoCoverageEngine extends CoverageEngine {
-  private static final Condition<AbstractTreeNode> NODE_TO_COVERAGE = node -> {
+  private static final Condition<AbstractTreeNode<?>> NODE_TO_COVERAGE = node -> {
     Object value = node.getValue();
     if (value instanceof PsiFile) {
       return isProductionGoFile((PsiFile)value);
@@ -177,11 +177,6 @@ public class GoCoverageEngine extends CoverageEngine {
   public CoverageViewExtension createCoverageViewExtension(Project project,
                                                            CoverageSuitesBundle suiteBundle,
                                                            CoverageViewManager.StateBean stateBean) {
-    return new DirectoryCoverageViewExtension(project, getCoverageAnnotator(project), suiteBundle, stateBean) {
-      @Override
-      public List<AbstractTreeNode> getChildrenNodes(AbstractTreeNode node) {
-        return ContainerUtil.filter(super.getChildrenNodes(node), NODE_TO_COVERAGE);
-      }
-    };
+    return new DirectoryCoverageViewExtension(project, getCoverageAnnotator(project), suiteBundle, stateBean);
   }
 }

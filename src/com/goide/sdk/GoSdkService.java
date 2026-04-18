@@ -20,7 +20,6 @@ import com.goide.GoConstants;
 import com.goide.GoEnvironmentUtil;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.Configurable;
@@ -33,18 +32,19 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.PathUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 public abstract class GoSdkService extends SimpleModificationTracker {
   public static final Logger LOG = Logger.getInstance(GoSdkService.class);
-  private static final Set<String> FEDORA_SUBDIRECTORIES = ContainerUtil.newHashSet("linux_amd64", "linux_386", "linux_arm");
+  private static final Set<String> FEDORA_SUBDIRECTORIES = new HashSet<>(Arrays.asList("linux_amd64", "linux_386", "linux_arm"));
   private static String ourTestSdkVersion;
 
   @NotNull
@@ -55,7 +55,7 @@ public abstract class GoSdkService extends SimpleModificationTracker {
   }
 
   public static GoSdkService getInstance(@NotNull Project project) {
-    return ServiceManager.getService(project, GoSdkService.class);
+    return project.getService(GoSdkService.class);
   }
 
   @Nullable

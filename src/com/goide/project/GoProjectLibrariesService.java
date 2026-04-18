@@ -24,13 +24,10 @@ import org.jetbrains.annotations.NotNull;
 
 @State(
   name = GoConstants.GO_LIBRARIES_SERVICE_NAME,
-  storages = {
-    @Storage(id = "default", file = StoragePathMacros.PROJECT_FILE),
-    @Storage(id = "dir", file = StoragePathMacros.PROJECT_CONFIG_DIR + "/" + GoConstants.GO_LIBRARIES_CONFIG_FILE, scheme = StorageScheme.DIRECTORY_BASED)
-  }
+  storages = @Storage(GoConstants.GO_LIBRARIES_CONFIG_FILE)
 )
 public class GoProjectLibrariesService extends GoLibrariesService<GoLibrariesState> {
   public static GoProjectLibrariesService getInstance(@NotNull Project project) {
-    return ServiceManager.getService(project, GoProjectLibrariesService.class);
+    return project.getService(GoProjectLibrariesService.class);
   }
 }

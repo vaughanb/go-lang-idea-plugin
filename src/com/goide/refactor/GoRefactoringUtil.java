@@ -43,10 +43,7 @@ import com.intellij.util.text.UniqueNameGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class GoRefactoringUtil {
   private GoRefactoringUtil() {}
@@ -59,7 +56,7 @@ public class GoRefactoringUtil {
   @NotNull
   public static List<PsiElement> getOccurrences(@NotNull PsiElement pattern, @Nullable PsiElement context) {
     if (context == null) return Collections.emptyList();
-    List<PsiElement> occurrences = ContainerUtil.newArrayList();
+    List<PsiElement> occurrences = new ArrayList<>();
     PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
       @Override
       public void visitElement(@NotNull PsiElement element) {
@@ -130,7 +127,7 @@ public class GoRefactoringUtil {
       assert file != null;
       PsiElement elementAt = file.findElementAt(offset);
 
-      Set<String> parameterNames = ContainerUtil.newHashSet();
+      Set<String> parameterNames = new HashSet<>();
       GoParameters parameters = PsiTreeUtil.getParentOfType(elementAt, GoParameters.class);
       if (parameters != null) {
         GoParamDefinition parameter = PsiTreeUtil.getParentOfType(elementAt, GoParamDefinition.class);
@@ -143,7 +140,7 @@ public class GoRefactoringUtil {
         }
       }
 
-      Set<LookupElement> set = ContainerUtil.newLinkedHashSet();
+      Set<LookupElement> set = new LinkedHashSet<>();
       for (String name : myNames) {
         set.add(LookupElementBuilder.create(UniqueNameGenerator.generateUniqueName(name, parameterNames)));
       }
@@ -158,7 +155,7 @@ public class GoRefactoringUtil {
       context = PsiTreeUtil.getParentOfType(context, GoBlock.class);
     }
     LinkedHashSet<String> usedNames = getNamesInContext(context);
-    LinkedHashSet<String> names = ContainerUtil.newLinkedHashSet();
+    LinkedHashSet<String> names = new LinkedHashSet<>();
     NamesValidator namesValidator = LanguageNamesValidation.INSTANCE.forLanguage(GoLanguage.INSTANCE);
 
     if (expression instanceof GoCallExpr) {
@@ -196,8 +193,8 @@ public class GoRefactoringUtil {
 
   @NotNull
   private static LinkedHashSet<String> getNamesInContext(PsiElement context) {
-    if (context == null) return ContainerUtil.newLinkedHashSet();
-    LinkedHashSet<String> names = ContainerUtil.newLinkedHashSet();
+    if (context == null) return new LinkedHashSet<>();
+    LinkedHashSet<String> names = new LinkedHashSet<>();
 
     for (GoNamedElement namedElement : PsiTreeUtil.findChildrenOfType(context, GoNamedElement.class)) {
       names.add(namedElement.getName());

@@ -33,10 +33,10 @@ import com.intellij.psi.ResolveResult;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.resolve.reference.impl.providers.FileReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -79,7 +79,8 @@ public class GoUnresolvedReferenceInspection extends GoInspectionBase {
           }
           else if (holder.isOnTheFly()) {
             boolean canBeLocal = PsiTreeUtil.getParentOfType(o, GoBlock.class) != null;
-            List<LocalQuickFix> fixesList = ContainerUtil.newArrayList(new GoIntroduceGlobalVariableFix(id, name));
+            List<LocalQuickFix> fixesList = new ArrayList<>();
+            fixesList.add(new GoIntroduceGlobalVariableFix(id, name));
             if (canBeLocal) {
               fixesList.add(new GoIntroduceLocalVariableFix(id, name));
             }
@@ -170,7 +171,7 @@ public class GoUnresolvedReferenceInspection extends GoInspectionBase {
     else {
       List<String> packagesToImport = GoImportPackageQuickFix.getImportPathVariantsToImport(reference.getCanonicalText(), target);
       if (!packagesToImport.isEmpty()) {
-        Collection<LocalQuickFix> result = ContainerUtil.newArrayList();
+        Collection<LocalQuickFix> result = new ArrayList<>();
         for (String importPath : packagesToImport) {
           GoImportPackageQuickFix importFix = new GoImportPackageQuickFix(target, importPath);
           if (importFix.isAvailable(target.getProject(), target.getContainingFile(), target, target)) {

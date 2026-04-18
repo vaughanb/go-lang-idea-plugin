@@ -17,16 +17,11 @@
 package com.goide.inspections;
 
 import com.goide.psi.GoFunctionOrMethodDeclaration;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.goide.GoConstants.TESTING_PATH;
 import static com.goide.inspections.GoPlaceholderChecker.PrintfArgumentType.*;
@@ -34,20 +29,20 @@ import static com.goide.inspections.GoPlaceholderChecker.PrintfArgumentType.*;
 public class GoPlaceholderChecker {
 
   // This holds the name of the known formatting functions and position of the string to be formatted
-  private static final Map<String, Integer> FORMATTING_FUNCTIONS = ContainerUtil.newHashMap(
-    Pair.pair("errorf", 0),
-    Pair.pair("fatalf", 0),
-    Pair.pair("fprintf", 1),
-    Pair.pair("fscanf", 1),
-    Pair.pair("logf", 0),
-    Pair.pair("panicf", 0),
-    Pair.pair("printf", 0),
-    Pair.pair("scanf", 0),
-    Pair.pair("skipf", 0),
-    Pair.pair("sprintf", 0),
-    Pair.pair("sscanf", 1));
+  private static final Map<String, Integer> FORMATTING_FUNCTIONS = Map.ofEntries(
+    Map.entry("errorf", 0),
+    Map.entry("fatalf", 0),
+    Map.entry("fprintf", 1),
+    Map.entry("fscanf", 1),
+    Map.entry("logf", 0),
+    Map.entry("panicf", 0),
+    Map.entry("printf", 0),
+    Map.entry("scanf", 0),
+    Map.entry("skipf", 0),
+    Map.entry("sprintf", 0),
+    Map.entry("sscanf", 1));
 
-  private static final Set<String> PRINTING_FUNCTIONS = ContainerUtil.newHashSet(
+  private static final Set<String> PRINTING_FUNCTIONS = new HashSet<>(Arrays.asList(
     "error",
     "error",
     "fatal",
@@ -60,7 +55,7 @@ public class GoPlaceholderChecker {
     "println",
     "sprint",
     "sprintln"
-  );
+  ));
 
   protected enum PrintfArgumentType {
     ANY(-1),
@@ -199,7 +194,7 @@ public class GoPlaceholderChecker {
 
   @NotNull
   public static List<Placeholder> parsePrintf(@NotNull String placeholderText) {
-    List<Placeholder> placeholders = ContainerUtil.newArrayList();
+    List<Placeholder> placeholders = new ArrayList<>();
     int argNum = 1;
     int w;
     for (int i = 0; i < placeholderText.length(); i += w) {
@@ -256,7 +251,7 @@ public class GoPlaceholderChecker {
     private final int startPos;         // index of the first character of the placeholder in the formatting string
 
     // the successive argument numbers that are consumed, adjusted to refer to actual arg in call
-    private final List<Integer> argNums = ContainerUtil.newArrayList();
+    private final List<Integer> argNums = new ArrayList<>();
 
     // Keep track of the parser state
     private Placeholder.State state;

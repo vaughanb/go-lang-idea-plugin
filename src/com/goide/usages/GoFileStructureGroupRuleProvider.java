@@ -22,6 +22,8 @@ import com.goide.psi.GoTypeSpec;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.usages.Usage;
+import com.intellij.usages.UsageGroup;
 import com.intellij.usages.PsiElementUsageGroupBase;
 import com.intellij.usages.impl.FileStructureGroupRuleProvider;
 import com.intellij.usages.rules.PsiElementUsage;
@@ -29,13 +31,17 @@ import com.intellij.usages.rules.UsageGroupingRule;
 import org.jetbrains.annotations.Nullable;
 
 public class GoFileStructureGroupRuleProvider implements FileStructureGroupRuleProvider {
-  public static final UsageGroupingRule USAGE_GROUPING_RULE = usage -> {
-    PsiElement psiElement = usage instanceof PsiElementUsage ? ((PsiElementUsage)usage).getElement() : null;
-    GoNamedElement topmostElement = PsiTreeUtil.getParentOfType(psiElement, GoTypeSpec.class, GoFunctionOrMethodDeclaration.class);
-    if (topmostElement != null) {
-      return new PsiElementUsageGroupBase<>(topmostElement);
+  public static final UsageGroupingRule USAGE_GROUPING_RULE = new UsageGroupingRule() {
+    @Nullable
+    @Override
+    public UsageGroup groupUsage(Usage usage) {
+      PsiElement psiElement = usage instanceof PsiElementUsage ? ((PsiElementUsage)usage).getElement() : null;
+      GoNamedElement topmostElement = PsiTreeUtil.getParentOfType(psiElement, GoTypeSpec.class, GoFunctionOrMethodDeclaration.class);
+      if (topmostElement != null) {
+        return new PsiElementUsageGroupBase<>(topmostElement);
+      }
+      return null;
     }
-    return null;
   };
 
   @Nullable

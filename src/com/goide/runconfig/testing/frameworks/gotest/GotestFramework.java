@@ -18,14 +18,17 @@ package com.goide.runconfig.testing.frameworks.gotest;
 
 import com.goide.psi.GoFunctionDeclaration;
 import com.goide.psi.GoFunctionOrMethodDeclaration;
-import com.goide.runconfig.testing.*;
+import com.goide.runconfig.testing.GoTestFinder;
+import com.goide.runconfig.testing.GoTestFramework;
+import com.goide.runconfig.testing.GoTestFunctionType;
+import com.goide.runconfig.testing.GoTestRunConfiguration;
+import com.goide.runconfig.testing.GoTestRunningState;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,10 +38,11 @@ import java.util.Collection;
 public class GotestFramework extends GoTestFramework {
   public static final String NAME = "gotest";
   public static final GotestFramework INSTANCE = new GotestFramework();
-  private static final ArrayList<GotestGenerateAction> GENERATE_ACTIONS = ContainerUtil.newArrayList(
+  private static final ArrayList<GotestGenerateAction> GENERATE_ACTIONS = new ArrayList<>(java.util.Arrays.asList(
     new GotestGenerateAction(GoTestFunctionType.TEST),
     new GotestGenerateAction(GoTestFunctionType.BENCHMARK),
-    new GotestGenerateAction(GoTestFunctionType.EXAMPLE));
+    new GotestGenerateAction(GoTestFunctionType.FUZZ),
+    new GotestGenerateAction(GoTestFunctionType.EXAMPLE)));
 
   private GotestFramework() {
   }
@@ -66,8 +70,9 @@ public class GotestFramework extends GoTestFramework {
 
   @Override
   public boolean isAvailableOnFunction(@Nullable GoFunctionOrMethodDeclaration functionOrMethodDeclaration) {
-    return functionOrMethodDeclaration instanceof GoFunctionDeclaration &&
-           GoTestFinder.isTestOrExampleFunction(functionOrMethodDeclaration);
+    if (!(functionOrMethodDeclaration instanceof GoFunctionDeclaration)) return false;
+    GoTestFunctionType type = GoTestFunctionType.fromName(functionOrMethodDeclaration.getName());
+    return type == GoTestFunctionType.TEST || type == GoTestFunctionType.EXAMPLE || type == GoTestFunctionType.FUZZ;
   }
 
   @NotNull

@@ -22,8 +22,6 @@ import com.goide.project.GoProjectLibrariesService;
 import com.goide.sdk.GoSdkType;
 import com.goide.sdk.GoSdkUtil;
 import com.intellij.conversion.*;
-import com.intellij.ide.impl.convert.JDomConvertingUtil;
-import com.intellij.openapi.application.AccessToken;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -34,7 +32,6 @@ import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.SystemProperties;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
@@ -43,13 +40,16 @@ import org.jetbrains.jps.model.serialization.JDomSerializationUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 
 public class GoProjectModelConverterProvider extends ConverterProvider {
   private static final String PROJECT_ROOT_MANAGER = "ProjectRootManager";
 
   protected GoProjectModelConverterProvider() {
-    super("go-project-model");
+    super();
   }
 
   @NotNull
@@ -62,12 +62,12 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
   @Override
   public ProjectConverter createConverter(@NotNull ConversionContext context) {
     return new ProjectConverter() {
-      private final Collection<File> additionalCreatedFiles = ContainerUtil.newArrayList();
-      private final Collection<File> additionalAffectedFiles = ContainerUtil.newArrayList();
+      private final Collection<Path> additionalCreatedFiles = new ArrayList<>();
+      private final Collection<Path> additionalAffectedFiles = new ArrayList<>();
 
       @Nullable
       @Override
-      public ConversionProcessor<ProjectSettings> createProjectFileConverter() {
+      public ConversionProcessor<ComponentManagerSettings> createProjectFileConverter() {
         return new ProjectFileConverter();
       }
 
@@ -86,7 +86,7 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
       @Override
       public boolean isConversionNeeded() {
         Element component = getProjectRootManager(context);
-        return component != null && isGoSdkType(component.getAttributeValue(ProjectRootManagerImpl.PROJECT_JDK_TYPE_ATTR));
+        return component != null && isGoSdkType(component.getAttributeValue("projectJdkType"));
       }
 
       @Override
@@ -96,20 +96,20 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
           try {
             File miscFile = miscFile(context);
             updateSdkType(miscFile, component);
-            additionalAffectedFiles.add(miscFile);
+            additionalAffectedFiles.add(miscFile.toPath());
 
-            File oldGoSettings = new File(context.getSettingsBaseDir(), "go_settings.xml");
+            File oldGoSettings = context.getSettingsBaseDir().resolve("go_settings.xml").toFile();
             if (oldGoSettings.exists()) {
               Element oldGoSettingsRoot = rootElement(oldGoSettings);
               if (isAttachProjectDirToLibraries(oldGoSettingsRoot)) {
-                File librariesConfigFile = new File(context.getSettingsBaseDir(), GoConstants.GO_LIBRARIES_CONFIG_FILE);
+                File librariesConfigFile = context.getSettingsBaseDir().resolve(GoConstants.GO_LIBRARIES_CONFIG_FILE).toFile();
                 if (librariesConfigFile.exists()) {
                   //noinspection ResultOfMethodCallIgnored
                   librariesConfigFile.delete();
-                  additionalAffectedFiles.add(librariesConfigFile);
+                  additionalAffectedFiles.add(librariesConfigFile.toPath());
                 }
                 else {
-                  additionalCreatedFiles.add(librariesConfigFile);
+                  additionalCreatedFiles.add(librariesConfigFile.toPath());
                 }
                 FileUtil.writeToFile(librariesConfigFile, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project></project>");
                 addProjectDirToLibraries(librariesConfigFile, rootElement(librariesConfigFile));
@@ -127,13 +127,13 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
 
       @NotNull
       @Override
-      public Collection<File> getAdditionalAffectedFiles() {
+      public Collection<Path> getAdditionalAffectedFiles() {
         return additionalAffectedFiles;
       }
 
       @NotNull
       @Override
-      public Collection<File> getCreatedFiles() {
+      public Collection<Path> getCreatedFiles() {
         return additionalCreatedFiles;
       }
     };
@@ -141,24 +141,29 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
 
   @NotNull
   private static Element rootElement(@NotNull File file) throws CannotConvertException {
-    return JDomConvertingUtil.loadDocument(file).getRootElement();
+    try {
+      return JDOMUtil.load(file);
+    }
+    catch (Exception e) {
+      throw new CannotConvertException("Cannot load " + file.getPath(), e);
+    }
   }
 
-  private static class ProjectFileConverter extends ConversionProcessor<ProjectSettings> {
+  private static class ProjectFileConverter extends ConversionProcessor<ComponentManagerSettings> {
     @Override
-    public boolean isConversionNeeded(@NotNull ProjectSettings settings) {
+    public boolean isConversionNeeded(@NotNull ComponentManagerSettings settings) {
       Element projectRootManager = getProjectRootManager(settings.getRootElement());
-      return projectRootManager != null && isGoSdkType(projectRootManager.getAttributeValue(ProjectRootManagerImpl.PROJECT_JDK_TYPE_ATTR));
+      return projectRootManager != null && isGoSdkType(projectRootManager.getAttributeValue("projectJdkType"));
     }
 
     @Override
-    public void process(@NotNull ProjectSettings settings) throws CannotConvertException {
+    public void process(@NotNull ComponentManagerSettings settings) throws CannotConvertException {
       Element projectRootManager = getProjectRootManager(settings.getRootElement());
       if (projectRootManager != null) {
-        updateSdkType(settings.getFile(), projectRootManager);
+        updateSdkType(settings.getPath().toFile(), projectRootManager);
       }
       if (isAttachProjectDirToLibraries(settings.getRootElement())) {
-        addProjectDirToLibraries(settings.getFile(), settings.getRootElement());
+        addProjectDirToLibraries(settings.getPath().toFile(), settings.getRootElement());
       }
       convertSdks();
     }
@@ -207,13 +212,13 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
   }
 
   private static void updateSdkType(@NotNull File file, @NotNull Element projectRootManager) throws CannotConvertException {
-    projectRootManager.setAttribute(ProjectRootManagerImpl.PROJECT_JDK_TYPE_ATTR, GoConstants.SDK_TYPE_ID);
+    projectRootManager.setAttribute("projectJdkType", GoConstants.SDK_TYPE_ID);
     saveFile(file, projectRootManager, "Cannot save sdk type changing");
   }
 
   @NotNull
   private static File miscFile(@NotNull ConversionContext context) {
-    return new File(context.getSettingsBaseDir(), "misc.xml");
+    return context.getSettingsBaseDir().resolve("misc.xml").toFile();
   }
 
   private static void addProjectDirToLibraries(@NotNull File file, @NotNull Element rootElement) throws CannotConvertException {
@@ -245,7 +250,7 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
 
   private static void saveFile(@NotNull File file, @NotNull Element rootElement, String errorMessage) throws CannotConvertException {
     try {
-      JDOMUtil.writeDocument(rootElement.getDocument(), file, SystemProperties.getLineSeparator());
+      JDOMUtil.write(rootElement, file.toPath());
     }
     catch (IOException e) {
       throw new CannotConvertException(errorMessage, e);
@@ -254,9 +259,9 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
 
   private static void convertSdks() {
     ProjectJdkTable sdkTable = ProjectJdkTable.getInstance();
-    Collection<String> globalGoPathUrls = ContainerUtil.newLinkedHashSet();
-    Collection<Sdk> sdksToDelete = ContainerUtil.newArrayList();
-    Collection<Sdk> sdksToAdd = ContainerUtil.newArrayList();
+    Collection<String> globalGoPathUrls = new LinkedHashSet<>();
+    Collection<Sdk> sdksToDelete = new ArrayList<>();
+    Collection<Sdk> sdksToAdd = new ArrayList<>();
     GoSdkType sdkType = GoSdkType.getInstance();
     for (Sdk sdk : sdkTable.getAllJdks()) {
       String sdkTypeName = sdk.getSdkType().getName();
@@ -281,8 +286,7 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
       globalGoPathUrls.remove(file.getUrl());
     }
 
-    AccessToken l = WriteAction.start();
-    try {
+    WriteAction.run(() -> {
       for (Sdk sdk : sdksToDelete) {
         sdkTable.removeJdk(sdk);
       }
@@ -291,10 +295,7 @@ public class GoProjectModelConverterProvider extends ConverterProvider {
       }
       globalGoPathUrls.addAll(GoApplicationLibrariesService.getInstance().getLibraryRootUrls());
       GoApplicationLibrariesService.getInstance().setLibraryRootUrls(globalGoPathUrls);
-    }
-    finally {
-      l.finish();
-    }
+    });
   }
 
   private static class RunConfigurationsConverter extends ConversionProcessor<RunManagerSettings> {

@@ -14,13 +14,13 @@
   ~ limitations under the License.
   -->
 
-<idea-plugin version="2">
+<idea-plugin>
   <extensions defaultExtensionNs="com.intellij">
     <additionalTextAttributes scheme="Default" file="colorscheme/AsmIntelDefault.xml"/>
     <additionalTextAttributes scheme="Darcula" file="colorscheme/AsmIntelDarcula.xml"/>
 
-    <!--<lang.parserDefinition language="plan9_x86" implementationClass="com.plan9.intel.lang.core.AsmIntelParserDefinition"/>-->
-    <fileTypeFactory implementation="com.plan9.intel.AsmIntelFileTypeFactory"/>
+    <fileType name="x86 Plan9 Assembly" implementationClass="com.plan9.intel.AsmIntelFileType" fieldName="INSTANCE"
+              language="plan9_x86" patterns="*_amd64.s;*_amd64p32.s;*_386.s"/>
     <lang.syntaxHighlighterFactory language="plan9_x86" implementationClass="com.plan9.intel.ide.highlighting.AsmIntelSyntaxHighlighterFactory"/>
     <colorSettingsPage implementation="com.plan9.intel.ide.highlighting.AsmIntelColorsAndFontsPage"/>
   </extensions>

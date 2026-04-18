@@ -24,7 +24,7 @@ import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RuntimeConfigurationException;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.ide.scratch.ScratchFileType;
+import com.intellij.ide.scratch.ScratchUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
@@ -67,7 +67,7 @@ public class GoRunFileConfiguration extends GoRunConfigurationWithMain<GoRunFile
     String path = getFilePath();
     if (!"go".equals(PathUtil.getFileExtension(path))) {
       VirtualFile f = LocalFileSystem.getInstance().refreshAndFindFileByPath(path);
-      if (f != null && f.getFileType() == ScratchFileType.INSTANCE) {
+      if (f != null && ScratchUtil.isScratch(f)) {
         String suffixWithoutExt = "." + UUID.randomUUID().toString().substring(0, 4);
         String suffix = suffixWithoutExt + ".go";
         String before = f.getName();

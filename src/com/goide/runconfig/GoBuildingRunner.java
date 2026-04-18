@@ -28,15 +28,15 @@ import com.intellij.execution.RunProfileStarter;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.RunnerSettings;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.runners.AsyncGenericProgramRunner;
+import com.intellij.execution.runners.AsyncProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunContentBuilder;
 import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.internal.statistic.UsageTrigger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -50,14 +50,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.concurrency.AsyncPromise;
 import org.jetbrains.concurrency.Promise;
-import org.jetbrains.debugger.connection.RemoteVmConnection;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
-public class GoBuildingRunner extends AsyncGenericProgramRunner {
+public class GoBuildingRunner extends AsyncProgramRunner<RunnerSettings> {
   private static final String ID = "GoBuildingRunner";
 
   @NotNull
@@ -77,12 +76,12 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
 
   @NotNull
   @Override
-  protected Promise<RunProfileStarter> prepare(@NotNull ExecutionEnvironment environment, @NotNull RunProfileState state)
+  protected Promise<RunContentDescriptor> execute(@NotNull ExecutionEnvironment environment, @NotNull RunProfileState state)
     throws ExecutionException {
     File outputFile = getOutputFile(environment, (GoApplicationRunningState)state);
     FileDocumentManager.getInstance().saveAllDocuments();
 
-    AsyncPromise<RunProfileStarter> buildingPromise = new AsyncPromise<>();
+    AsyncPromise<RunContentDescriptor> buildingPromise = new AsyncPromise<>();
     GoHistoryProcessListener historyProcessListener = new GoHistoryProcessListener();
     ((GoApplicationRunningState)state).createCommonExecutor()
       .withParameters("build")
@@ -99,12 +98,19 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
         public void processTerminated(ProcessEvent event) {
           super.processTerminated(event);
           boolean compilationFailed = event.getExitCode() != 0;
-          if (((GoApplicationRunningState)state).isDebug()) {
-              buildingPromise.setResult(new MyDebugStarter(outputFile.getAbsolutePath(), historyProcessListener, compilationFailed));
+          try {
+            RunProfileStarter starter;
+            if (((GoApplicationRunningState)state).isDebug()) {
+              starter = new MyDebugStarter(outputFile.getAbsolutePath(), historyProcessListener, compilationFailed);
             }
             else {
-              buildingPromise.setResult(new MyRunStarter(outputFile.getAbsolutePath(), historyProcessListener, compilationFailed));
+              starter = new MyRunStarter(outputFile.getAbsolutePath(), historyProcessListener, compilationFailed);
             }
+            buildingPromise.setResult(starter.execute(state, environment));
+          }
+          catch (ExecutionException e) {
+            buildingPromise.setError(e);
+          }
         }
       }).executeWithProgress(false);
     return buildingPromise;
@@ -190,15 +196,13 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
           throw new ExecutionException("Cannot run debugger");
         }
 
-        UsageTrigger.trigger("go.dlv.debugger");
-      
         return XDebuggerManager.getInstance(env.getProject()).startSession(env, new XDebugProcessStarter() {
           @NotNull
           @Override
           public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-            RemoteVmConnection connection = new DlvRemoteVmConnection();
+            DlvRemoteVmConnection connection = new DlvRemoteVmConnection();
+            connection.open(new InetSocketAddress(java.net.InetAddress.getLoopbackAddress(), port));
             DlvDebugProcess process = new DlvDebugProcess(session, connection, executionResult);
-            connection.open(new InetSocketAddress(NetUtils.getLoopbackAddress(), port));
             return process;
           }
         }).getRunContentDescriptor();
@@ -231,7 +235,7 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
         ((GoApplicationRunningState)state).setOutputFilePath(myOutputFilePath);
         ((GoApplicationRunningState)state).setCompilationFailed(myCompilationFailed);
         ExecutionResult executionResult = state.execute(env.getExecutor(), GoBuildingRunner.this);
-        return executionResult != null ? new RunContentBuilder(executionResult, env).showRunContent(env.getContentToReuse()) : null;
+        return executionResult != null ? new RunContentBuilder(executionResult, env).showRunContent(null) : null;
       }
       return null;
     }

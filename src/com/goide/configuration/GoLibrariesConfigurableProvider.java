@@ -38,7 +38,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -63,7 +65,7 @@ public class GoLibrariesConfigurableProvider extends ConfigurableProvider {
       @Override
       public JComponent createComponent() {
         List<UnnamedConfigurable> configurables = getConfigurables();
-        Collection<HideableDecorator> hideableDecorators = ContainerUtil.newHashSet();
+        Collection<HideableDecorator> hideableDecorators = new HashSet<>();
 
         GridLayoutManager layoutManager = new GridLayoutManager(configurables.size() + 1, 1, new Insets(0, 0, 0, 0), -1, -1);
         JPanel rootPanel = new JPanel(layoutManager);
@@ -101,7 +103,7 @@ public class GoLibrariesConfigurableProvider extends ConfigurableProvider {
       @NotNull
       @Override
       protected List<UnnamedConfigurable> createConfigurables() {
-        List<UnnamedConfigurable> result = ContainerUtil.newArrayList();
+        List<UnnamedConfigurable> result = new ArrayList<>();
         String[] urlsFromEnv = ContainerUtil.map2Array(GoSdkUtil.getGoPathsRootsFromEnvironment(), String.class, VirtualFile::getUrl);
         result.add(new GoLibrariesConfigurable("Global libraries", GoApplicationLibrariesService.getInstance(), urlsFromEnv));
         if (!myProject.isDefault()) {

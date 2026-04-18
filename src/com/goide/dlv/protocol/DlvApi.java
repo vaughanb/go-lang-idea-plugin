@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+// Targets Delve 1.24+ (https://github.com/go-delve/delve).
 @SuppressWarnings("unused")
 public class DlvApi {
   private final static Logger LOG = Logger.getInstance(DlvApi.class);

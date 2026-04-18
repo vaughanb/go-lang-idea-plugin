@@ -46,7 +46,11 @@ public abstract class GoExternalToolsAction extends DumbAwareAction {
   private static void error(@NotNull String title, @NotNull Project project, @Nullable Exception ex) {
     String message = ex == null ? "" : ExceptionUtil.getUserStackTrace(ex, LOG);
     NotificationType type = NotificationType.ERROR;
-    Notifications.Bus.notify(GoConstants.GO_EXECUTION_NOTIFICATION_GROUP.createNotification(title, message, type, null), project);
+    Notifications.Bus.notify(
+      com.intellij.notification.NotificationGroupManager.getInstance()
+        .getNotificationGroup(GoConstants.GO_EXECUTION_NOTIFICATION_GROUP_ID)
+        .createNotification(title, message, type),
+      project);
   }
 
   @Override
@@ -95,8 +99,7 @@ public abstract class GoExternalToolsAction extends DumbAwareAction {
                               @NotNull Project project,
                               @NotNull String title,
                               boolean withProgress) {
-    //noinspection unchecked
-    return doSomething(virtualFile, module, project, title, withProgress, Consumer.EMPTY_CONSUMER);
+    return doSomething(virtualFile, module, project, title, withProgress, c -> {});
   }
 
   protected boolean doSomething(@NotNull VirtualFile virtualFile,

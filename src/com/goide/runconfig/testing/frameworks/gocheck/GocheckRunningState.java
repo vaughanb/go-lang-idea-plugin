@@ -29,6 +29,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 
 public class GocheckRunningState extends GoTestRunningState {
   public GocheckRunningState(@NotNull ExecutionEnvironment env,
@@ -45,7 +46,7 @@ public class GocheckRunningState extends GoTestRunningState {
   @NotNull
   @Override
   protected String buildFilterPatternForFile(GoFile file) {
-    Collection<String> testNames = ContainerUtil.newLinkedHashSet();
+    Collection<String> testNames = new LinkedHashSet<>();
     for (GoMethodDeclaration method : file.getMethods()) {
       ContainerUtil.addIfNotNull(testNames, GocheckFramework.getGocheckTestName(method));
     }

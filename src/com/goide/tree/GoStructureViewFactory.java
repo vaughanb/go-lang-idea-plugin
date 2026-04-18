@@ -37,10 +37,12 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.SyntaxTraverser;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -64,8 +66,8 @@ public class GoStructureViewFactory implements PsiStructureViewFactory {
   }
 
   public static class Model extends StructureViewModelBase implements StructureViewModel.ElementInfoProvider {
-    private static final List<NodeProvider> PROVIDERS =
-      ContainerUtil.newSmartList(new TreeElementFileStructureNodeProvider());
+    private static final List<NodeProvider<?>> PROVIDERS =
+      new SmartList<>(new TreeElementFileStructureNodeProvider());
 
     Model(@NotNull PsiFile file, @Nullable Editor editor) {
       super(file, editor, new Element(file));
@@ -91,7 +93,7 @@ public class GoStructureViewFactory implements PsiStructureViewFactory {
 
     @NotNull
     @Override
-    public Collection<NodeProvider> getNodeProviders() {
+    public Collection<NodeProvider<?>> getNodeProviders() {
       return PROVIDERS;
     }
 
@@ -116,7 +118,7 @@ public class GoStructureViewFactory implements PsiStructureViewFactory {
         PsiElement psi = node instanceof Element ? ((Element)node).getElement() : null;
         if (psi instanceof GoFile) {
           GoFile orig = (GoFile)psi;
-          List<TreeElement> result = ContainerUtil.newSmartList();
+          List<TreeElement> result = new SmartList<>();
           for (GoFile f : GoPackageUtil.getAllPackageFiles(orig)) {
             if (f != orig) {
               ContainerUtil.addAll(result, new Element(f).getChildren());
@@ -155,7 +157,7 @@ public class GoStructureViewFactory implements PsiStructureViewFactory {
     @NotNull
     @Override
     public Collection<StructureViewTreeElement> getChildrenBase() {
-      List<StructureViewTreeElement> result = ContainerUtil.newArrayList();
+      List<StructureViewTreeElement> result = new ArrayList<>();
       PsiElement element = getElement();
       if (element instanceof GoFile) {
         for (GoTypeSpec o : ((GoFile)element).getTypes()) result.add(new Element(o));

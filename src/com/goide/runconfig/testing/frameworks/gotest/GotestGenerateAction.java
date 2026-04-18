@@ -22,10 +22,8 @@ import com.goide.psi.GoFile;
 import com.goide.psi.GoImportSpec;
 import com.goide.psi.impl.GoPsiImplUtil;
 import com.goide.runconfig.testing.GoTestFunctionType;
-import com.goide.template.GoLiveTemplateContextType;
 import com.intellij.codeInsight.AutoPopupController;
 import com.intellij.codeInsight.CodeInsightActionHandler;
-import com.intellij.codeInsight.template.TemplateContextType;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorModificationUtil;
@@ -49,9 +47,7 @@ public class GotestGenerateAction extends GoGenerateTestActionBase {
 
   @Override
   protected boolean isValidForFile(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
-    GoLiveTemplateContextType.File fileContextType =
-      TemplateContextType.EP_NAME.findExtension(GoLiveTemplateContextType.File.class);
-    return fileContextType != null && fileContextType.isInContext(file, editor.getCaretModel().getOffset());
+    return file instanceof GoFile;
   }
 
   @NotNull

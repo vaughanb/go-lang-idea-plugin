@@ -57,7 +57,7 @@ public class GoFoldingBuilder extends CustomFoldingBuilder implements DumbAware 
                            @NotNull String placeholderText,
                            @NotNull List<FoldingDescriptor> result) {
     if (l != null && r != null) {
-      result.add(new NamedFoldingDescriptor(e, l.getTextRange().getStartOffset(), r.getTextRange().getEndOffset(), null, placeholderText));
+      result.add(new NamedFoldingDescriptor(e.getNode(), new TextRange(l.getTextRange().getStartOffset(), r.getTextRange().getEndOffset()), null, placeholderText));
     }
   }
 
@@ -84,7 +84,7 @@ public class GoFoldingBuilder extends CustomFoldingBuilder implements DumbAware 
     if (end != null) {
       int startOffset = comment.getTextRange().getStartOffset();
       int endOffset = end.getTextRange().getEndOffset();
-      result.add(new NamedFoldingDescriptor(comment, startOffset, endOffset, null, "/.../"));
+      result.add(new NamedFoldingDescriptor(comment.getNode(), new TextRange(startOffset, endOffset), null, "/.../"));
     }
   }
 
@@ -106,7 +106,7 @@ public class GoFoldingBuilder extends CustomFoldingBuilder implements DumbAware 
         int startOffset = importKeyword.getNextSibling() instanceof PsiWhiteSpace ? offset + 1 : offset;
         int endOffset = importList.getTextRange().getEndOffset();
         if (endOffset - startOffset > 3) {
-          result.add(new NamedFoldingDescriptor(importList, startOffset, endOffset, null, "..."));
+          result.add(new NamedFoldingDescriptor(importList.getNode(), new TextRange(startOffset, endOffset), null, "..."));
         }
       }
     }
@@ -169,7 +169,7 @@ public class GoFoldingBuilder extends CustomFoldingBuilder implements DumbAware 
     }
 
     if (!quick) {
-      Set<PsiElement> processedComments = ContainerUtil.newHashSet();
+      Set<PsiElement> processedComments = new java.util.HashSet<>();
       PsiTreeUtil.processElements(file, element -> {
         ASTNode node = element.getNode();
         IElementType type = node.getElementType();

@@ -34,6 +34,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.goide.completion.GoCompletionUtil.createPrefixMatcher;
@@ -172,7 +173,7 @@ public class GoReferenceCompletionProvider extends CompletionProvider<Completion
     @NotNull private final CompletionResultSet myResult;
     private final boolean myForTypes;
     private final boolean myVendoringEnabled;
-    private final Set<String> myProcessedNames = ContainerUtil.newHashSet();
+    private final Set<String> myProcessedNames = new HashSet<>();
 
     public MyGoScopeProcessor(@NotNull CompletionResultSet result, @NotNull PsiFile originalFile, boolean forTypes) {
       myResult = result;

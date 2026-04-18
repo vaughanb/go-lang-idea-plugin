@@ -27,16 +27,13 @@ import org.jetbrains.annotations.Nullable;
 
 @State(
   name = "GoExcludedPaths",
-  storages = {
-    @Storage(id = "default", file = StoragePathMacros.PROJECT_FILE),
-    @Storage(id = "dir", file = StoragePathMacros.PROJECT_CONFIG_DIR + "/goExcludedPaths.xml", scheme = StorageScheme.DIRECTORY_BASED)
-  }
+  storages = @Storage("goExcludedPaths.xml")
 )
 public class GoExcludedPathsSettings extends SimpleModificationTracker implements PersistentStateComponent<GoExcludedPathsSettings> {
   private String[] myExcludedPackages = ArrayUtil.EMPTY_STRING_ARRAY;
 
   public static GoExcludedPathsSettings getInstance(Project project) {
-    return ServiceManager.getService(project, GoExcludedPathsSettings.class);
+    return project.getService(GoExcludedPathsSettings.class);
   }
 
   @Nullable

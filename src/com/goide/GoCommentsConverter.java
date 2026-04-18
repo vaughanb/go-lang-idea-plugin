@@ -19,12 +19,12 @@ package com.goide;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.tree.IElementType;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.URLUtil;
 import com.intellij.xml.util.XmlStringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +49,7 @@ public class GoCommentsConverter {
 
   @NotNull
   private static List<String> getStrings(@NotNull List<PsiComment> comments) {
-    List<String> strings = ContainerUtil.newArrayList();
+    List<String> strings = new ArrayList<>();
     for (PsiComment comment : comments) {
       IElementType type = comment.getTokenType();
       if (type == GoParserDefinition.LINE_COMMENT) {
@@ -164,7 +164,7 @@ public class GoCommentsConverter {
         text = textWithLinks.toString();
       }
       
-      return nice ? StringUtil.replace(text, new String[]{"``", "''"}, new String[]{"&ldquo;", "&rdquo;"}) : text;
+      return nice ? StringUtil.replace(text, java.util.Arrays.asList("``", "''"), java.util.Arrays.asList("&ldquo;", "&rdquo;")) : text;
     }
 
     void flushBlock(@NotNull String wrapTag) {

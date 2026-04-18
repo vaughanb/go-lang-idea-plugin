@@ -22,6 +22,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +42,7 @@ public class GoDuplicateReturnArgumentInspection extends GoDuplicateArgumentInsp
   @NotNull
   private static Set<String> getParamNames(@NotNull GoSignature o) {
     List<GoParameterDeclaration> params = o.getParameters().getParameterDeclarationList();
-    Set<String> names = ContainerUtil.newLinkedHashSet();
+    Set<String> names = new LinkedHashSet<>();
     for (GoParameterDeclaration fp : params) {
       for (GoParamDefinition parameter : fp.getParamDefinitionList()) {
         if (parameter.isBlank()) continue;

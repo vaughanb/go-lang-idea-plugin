@@ -24,12 +24,12 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ThreeState;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class GoTargetSystem {
@@ -41,7 +41,7 @@ public class GoTargetSystem {
   @Nullable public final String compiler;
 
   @NotNull public final ThreeState cgoEnabled;
-  private final Set<String> customFlags = ContainerUtil.newHashSet();
+  private final Set<String> customFlags = new HashSet<>();
 
   public GoTargetSystem(@NotNull String os, @NotNull String arch, @Nullable String goVersion, @Nullable String compiler,
                         @NotNull ThreeState cgoEnabled, @NotNull String... customFlags) {

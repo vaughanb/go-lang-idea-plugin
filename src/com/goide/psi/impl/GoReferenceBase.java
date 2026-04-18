@@ -26,6 +26,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +55,7 @@ public abstract class GoReferenceBase<T extends GoReferenceExpressionBase> exten
   private static void putIfAbsent(@NotNull GoImportSpec importSpec, @NotNull PsiElement usage) {
     //noinspection SynchronizationOnLocalVariableOrMethodParameter
     synchronized (importSpec) {
-      List<PsiElement> newUsages = ContainerUtil.newSmartList(usage);
+      List<PsiElement> newUsages = new SmartList<>(usage);
       newUsages.addAll(IMPORT_USERS.get(importSpec, ContainerUtil.emptyList()));
       importSpec.putUserData(IMPORT_USERS, newUsages);
     }

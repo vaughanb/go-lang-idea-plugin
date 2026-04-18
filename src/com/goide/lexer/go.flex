@@ -34,13 +34,17 @@ DIGIT =  [:digit:]
 HEX_DIGIT = [0-9A-Fa-f]
 INT_DIGIT = [0-9]
 OCT_DIGIT = [0-7]
+BIN_DIGIT = [01]
 
-NUM_INT = "0" | ([1-9] {INT_DIGIT}*)
-NUM_HEX = ("0x" | "0X") {HEX_DIGIT}+
-NUM_OCT = "0" {OCT_DIGIT}+
+NUM_INT = "0" | ([1-9] ("_"? {INT_DIGIT})*)
+NUM_HEX = ("0x" | "0X") "_"? {HEX_DIGIT} ("_"? {HEX_DIGIT})*
+NUM_OCT = "0" ("o" | "O") "_"? {OCT_DIGIT} ("_"? {OCT_DIGIT})* | "0" {OCT_DIGIT} ("_"? {OCT_DIGIT})*
+NUM_BIN = ("0b" | "0B") "_"? {BIN_DIGIT} ("_"? {BIN_DIGIT})*
 
-FLOAT_EXPONENT = [eE] [+-]? {DIGIT}+
-NUM_FLOAT = ( ( ({DIGIT}+ "." {DIGIT}*) | ({DIGIT}* "." {DIGIT}+) ) {FLOAT_EXPONENT}?) | ({DIGIT}+ {FLOAT_EXPONENT})
+FLOAT_EXPONENT = [eE] [+-]? ("_"? {DIGIT})+
+HEX_FLOAT_EXPONENT = [pP] [+-]? ("_"? {DIGIT})+
+NUM_FLOAT = ( ( ({DIGIT} ("_"? {DIGIT})* "." ({DIGIT} ("_"? {DIGIT})*)?) | ({DIGIT} ("_"? {DIGIT})*)? "." {DIGIT} ("_"? {DIGIT})* ) {FLOAT_EXPONENT}?) | ({DIGIT} ("_"? {DIGIT})* {FLOAT_EXPONENT})
+NUM_HEX_FLOAT = ("0x" | "0X") ("_"? {HEX_DIGIT})* ("." ("_"? {HEX_DIGIT})*)? {HEX_FLOAT_EXPONENT}
 
 IDENT = {LETTER} ({LETTER} | {DIGIT} )*
 
@@ -73,6 +77,7 @@ ESCAPES = [abfnrtv]
 "`" [^`]* "`"?                            { yybegin(MAYBE_SEMICOLON); return RAW_STRING; }
 "..."                                     { return TRIPLE_DOT; }
 "."                                       { return DOT; }
+"~"                                       { return TILDE; }
 "|"                                       { return BIT_OR; }
 "{"                                       { return LBRACE; }
 "}"                                       { yybegin(MAYBE_SEMICOLON); return RBRACE; }
@@ -170,9 +175,12 @@ ESCAPES = [abfnrtv]
 
 {IDENT}                                   { yybegin(MAYBE_SEMICOLON); return IDENTIFIER; }
 
+{NUM_HEX_FLOAT}"i"                       { yybegin(MAYBE_SEMICOLON); return FLOATI; }
+{NUM_HEX_FLOAT}                           { yybegin(MAYBE_SEMICOLON); return FLOAT; }
 {NUM_FLOAT}"i"                            { yybegin(MAYBE_SEMICOLON); return FLOATI; }
 {NUM_FLOAT}                               { yybegin(MAYBE_SEMICOLON); return FLOAT; }
 {DIGIT}+"i"                               { yybegin(MAYBE_SEMICOLON); return DECIMALI; }
+{NUM_BIN}                                 { yybegin(MAYBE_SEMICOLON); return BIN; }
 {NUM_OCT}                                 { yybegin(MAYBE_SEMICOLON); return OCT; }
 {NUM_HEX}                                 { yybegin(MAYBE_SEMICOLON); return HEX; }
 {NUM_INT}                                 { yybegin(MAYBE_SEMICOLON); return INT; }

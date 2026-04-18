@@ -19,7 +19,7 @@ package com.goide.project.migration;
 import com.goide.GoConstants;
 import com.goide.project.GoBuildTargetSettings;
 import com.intellij.conversion.*;
-import com.intellij.ide.impl.convert.JDomConvertingUtil;
+import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
@@ -27,12 +27,13 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.serialization.JDomSerializationUtil;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 
 public class GoBuildTagsSettingsConverterProvider extends ConverterProvider {
   protected GoBuildTagsSettingsConverterProvider() {
-    super("go-build-tags-settings");
+    super();
   }
 
   @NotNull
@@ -48,20 +49,20 @@ public class GoBuildTagsSettingsConverterProvider extends ConverterProvider {
       private GoBuildTargetSettings newSettings;
 
       @NotNull
-      private File getGoBuildFlagsFile() {return new File(context.getSettingsBaseDir(), "goBuildFlags.xml");}
+      private File getGoBuildFlagsFile() {return context.getSettingsBaseDir().resolve("goBuildFlags.xml").toFile();}
 
       @Nullable
       @Override
-      public ConversionProcessor<ProjectSettings> createProjectFileConverter() {
-        return new ConversionProcessor<ProjectSettings>() {
+      public ConversionProcessor<ComponentManagerSettings> createProjectFileConverter() {
+        return new ConversionProcessor<ComponentManagerSettings>() {
           @Override
-          public boolean isConversionNeeded(@NotNull ProjectSettings settings) {
+          public boolean isConversionNeeded(@NotNull ComponentManagerSettings settings) {
             Element oldSettings = JDomSerializationUtil.findComponent(settings.getRootElement(), "GoBuildFlags");
             return oldSettings != null;
           }
 
           @Override
-          public void process(@NotNull ProjectSettings settings) throws CannotConvertException {
+          public void process(@NotNull ComponentManagerSettings settings) throws CannotConvertException {
             Element oldSettings = JDomSerializationUtil.findComponent(settings.getRootElement(), "GoBuildFlags");
             if (oldSettings != null) {
               newSettings = XmlSerializer.deserialize(oldSettings, GoBuildTargetSettings.class);
@@ -72,8 +73,8 @@ public class GoBuildTagsSettingsConverterProvider extends ConverterProvider {
       }
 
       @Override
-      public Collection<File> getAdditionalAffectedFiles() {
-        return Collections.singletonList(getGoBuildFlagsFile());
+      public Collection<Path> getAdditionalAffectedFiles() {
+        return Collections.singletonList(getGoBuildFlagsFile().toPath());
       }
 
       @Override
@@ -85,7 +86,13 @@ public class GoBuildTagsSettingsConverterProvider extends ConverterProvider {
       public void preProcessingFinished() throws CannotConvertException {
         File oldSettingsFile = getGoBuildFlagsFile();
         if (oldSettingsFile.exists()) {
-          Element oldSettingsRoot = JDomConvertingUtil.loadDocument(oldSettingsFile).getRootElement();
+          Element oldSettingsRoot;
+          try {
+            oldSettingsRoot = JDOMUtil.load(oldSettingsFile);
+          }
+          catch (Exception e) {
+            throw new CannotConvertException("Cannot load " + oldSettingsFile.getPath(), e);
+          }
           Element buildFlagsSettings = JDomSerializationUtil.findComponent(oldSettingsRoot, "GoBuildFlags");
           if (buildFlagsSettings != null) {
             newSettings = XmlSerializer.deserialize(buildFlagsSettings, GoBuildTargetSettings.class);

@@ -32,9 +32,9 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotifications;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class WrongModuleTypeNotificationProvider extends EditorNotifications.Provider<EditorNotificationPanel> implements DumbAware {
@@ -88,6 +88,6 @@ public class WrongModuleTypeNotificationProvider extends EditorNotifications.Pro
   @NotNull
   private static Set<String> getIgnoredModules(@NotNull Project project) {
     String value = PropertiesComponent.getInstance(project).getValue(DONT_ASK_TO_CHANGE_MODULE_TYPE_KEY, "");
-    return ContainerUtil.newLinkedHashSet(StringUtil.split(value, ","));
+    return new LinkedHashSet<>(StringUtil.split(value, ","));
   }
 }

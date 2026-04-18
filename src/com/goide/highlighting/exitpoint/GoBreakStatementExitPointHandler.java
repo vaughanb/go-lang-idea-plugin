@@ -53,12 +53,12 @@ public class GoBreakStatementExitPointHandler extends HighlightUsagesHandlerBase
   }
 
   @Override
-  protected void selectTargets(List<PsiElement> targets, @NotNull Consumer<List<PsiElement>> selectionConsumer) {
+  protected void selectTargets(List<? extends PsiElement> targets, @NotNull Consumer<? super List<? extends PsiElement>> selectionConsumer) {
     selectionConsumer.consume(targets);
   }
 
   @Override
-  public void computeUsages(List<PsiElement> targets) {
+  public void computeUsages(List<? extends PsiElement> targets) {
     PsiElement breakStmtOwner = findBreakStatementOwner();
     GoRecursiveVisitor visitor = new GoRecursiveVisitor() {
       @Override

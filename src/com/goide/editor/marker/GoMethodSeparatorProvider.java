@@ -33,25 +33,18 @@ import java.util.Collection;
 import java.util.List;
 
 public class GoMethodSeparatorProvider implements LineMarkerProvider {
-  private final DaemonCodeAnalyzerSettings myDaemonSettings;
-  private final EditorColorsManager myColorsManager;
-
-  public GoMethodSeparatorProvider(DaemonCodeAnalyzerSettings daemonSettings, EditorColorsManager colorsManager) {
-    myDaemonSettings = daemonSettings;
-    myColorsManager = colorsManager;
-  }
 
   @Nullable
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement o) {
-    if (myDaemonSettings.SHOW_METHOD_SEPARATORS && o instanceof GoTopLevelDeclaration && o.getParent() instanceof GoFile) {
-      return LineMarkersPass.createMethodSeparatorLineMarker(findAnchorElement((GoTopLevelDeclaration)o), myColorsManager);
+    if (DaemonCodeAnalyzerSettings.getInstance().SHOW_METHOD_SEPARATORS && o instanceof GoTopLevelDeclaration && o.getParent() instanceof GoFile) {
+      return LineMarkersPass.createMethodSeparatorLineMarker(findAnchorElement((GoTopLevelDeclaration)o), EditorColorsManager.getInstance());
     }
     return null;
   }
 
   @Override
-  public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
+  public void collectSlowLineMarkers(@NotNull List<? extends PsiElement> elements, @NotNull Collection<? super LineMarkerInfo<?>> result) {
   }
 
   @NotNull

@@ -53,7 +53,7 @@ public class GoFunctionArgumentUnwrapper extends GoUnwrapper {
   }
 
   @Override
-  public PsiElement collectAffectedElements(PsiElement e, List<PsiElement> toExtract) {
+  public PsiElement collectAffectedElements(PsiElement e, List<? super PsiElement> toExtract) {
     super.collectAffectedElements(e, toExtract);
     return e.getParent().getParent();
   }

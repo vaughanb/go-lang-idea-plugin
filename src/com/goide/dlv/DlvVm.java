@@ -20,99 +20,32 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.vfs.CharsetToolkit;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.json.JsonObjectDecoder;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.concurrency.Promise;
-import org.jetbrains.debugger.*;
-import org.jetbrains.io.ChannelBufferToString;
-import org.jetbrains.io.SimpleChannelInboundHandlerAdapter;
 import org.jetbrains.jsonProtocol.Request;
 
 import java.io.IOException;
 
-public class DlvVm extends VmBase {
-  private final static Logger LOG = Logger.getInstance(DlvVm.class);
+public class DlvVm {
+  private static final Logger LOG = Logger.getInstance(DlvVm.class);
 
   @NotNull private final DlvCommandProcessor commandProcessor;
-  @NotNull private final StandaloneVmHelper vmHelper;
-  @NotNull private final DummyBreakpointManager breakpointManager = new DummyBreakpointManager();
+  @NotNull private final Channel channel;
 
-  public DlvVm(@NotNull DebugEventListener tabListener, @NotNull Channel channel) {
-    super(tabListener);
+  public DlvVm(@NotNull Channel channel) {
+    this.channel = channel;
 
     commandProcessor = new DlvCommandProcessor() {
       @Override
       public boolean write(@NotNull Request message) throws IOException {
         ByteBuf content = message.getBuffer();
         LOG.info("OUT: " + content.toString(CharsetToolkit.UTF8_CHARSET));
-        return vmHelper.write(content);
+        return channel.writeAndFlush(content).awaitUninterruptibly().isSuccess();
       }
     };
-    vmHelper = new StandaloneVmHelper(this, commandProcessor, channel);
-
-    channel.pipeline().addLast(new JsonObjectDecoder(), new SimpleChannelInboundHandlerAdapter() {
-      @Override
-      protected void messageReceived(ChannelHandlerContext context, Object message) throws Exception {
-        if (message instanceof ByteBuf) {
-          LOG.info("IN: " + ((ByteBuf)message).toString(CharsetToolkit.UTF8_CHARSET));
-          CharSequence string = ChannelBufferToString.readChars((ByteBuf)message);
-          JsonReaderEx ex = new JsonReaderEx(string);
-          getCommandProcessor().processIncomingJson(ex);
-        }
-      }
-    });
   }
 
   @NotNull
-  @Override
-  public AttachStateManager getAttachStateManager() {
-    return vmHelper;
-  }
-
-  @NotNull
-  public final DlvCommandProcessor getCommandProcessor() {
+  public DlvCommandProcessor getCommandProcessor() {
     return commandProcessor;
-  }
-
-  @NotNull
-  @Override
-  public ScriptManagerBase<ScriptBase> getScriptManager() {
-    throw new UnsupportedOperationException();
-  }
-
-  @NotNull
-  @Override
-  public BreakpointManager getBreakpointManager() {
-    return breakpointManager;
-  }
-
-  /**
-   * Changed API between minor versions, runtime is compatible
-   * Todo: uncomment since 2016.2, when only the last build of 15.0 will be supported
-   */
-  @SuppressWarnings("unchecked")
-  @NotNull
-  @Override
-  public SuspendContextManagerBase getSuspendContextManager() {
-    return new SuspendContextManagerBase() {
-      @NotNull
-      @Override
-      public Promise<Void> continueVm(@NotNull StepAction stepAction, int stepCount) {
-        return Promise.DONE;
-      }
-
-      @NotNull
-      @Override
-      protected DebugEventListener getDebugListener() {
-        return DlvVm.this.getDebugListener();
-      }
-
-      @NotNull
-      @Override
-      protected Promise<?> doSuspend() {
-        return Promise.DONE;
-      }
-    };
   }
 }

@@ -22,10 +22,10 @@ import com.intellij.openapi.module.ModuleConfigurationEditor;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ui.configuration.*;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GoModuleEditorsProvider implements ModuleConfigurationEditorProvider {
@@ -38,7 +38,7 @@ public class GoModuleEditorsProvider implements ModuleConfigurationEditorProvide
     }
 
     String moduleName = module.getName();
-    List<ModuleConfigurationEditor> editors = ContainerUtil.newArrayList();
+    List<ModuleConfigurationEditor> editors = new ArrayList<>();
     editors.add(new ContentEntriesEditor(moduleName, state));
     editors.add(new OutputEditorEx(state));
     editors.add(new ClasspathEditor(state));

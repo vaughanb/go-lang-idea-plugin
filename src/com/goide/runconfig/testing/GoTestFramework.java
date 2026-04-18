@@ -26,7 +26,6 @@ import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsC
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,9 +37,9 @@ import java.util.List;
 public abstract class GoTestFramework {
   private static class Lazy {
 
-    private static final ArrayList<GoTestFramework> ALL_FRAMEWORKS = ContainerUtil.newArrayList(
+    private static final ArrayList<GoTestFramework> ALL_FRAMEWORKS = new ArrayList<GoTestFramework>(java.util.Arrays.asList(
       GotestFramework.INSTANCE, GocheckFramework.INSTANCE, GobenchFramework.INSTANCE
-    );
+    ));
   }
   public static List<GoTestFramework> all() {
     return Lazy.ALL_FRAMEWORKS;

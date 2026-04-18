@@ -19,8 +19,8 @@ package com.goide.appengine.run;
 import com.goide.appengine.GoAppEngineIcons;
 import com.goide.runconfig.GoConfigurationFactoryBase;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
+import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,6 +39,6 @@ public class GoAppEngineRunConfigurationType extends ConfigurationTypeBase {
 
   @NotNull
   public static GoAppEngineRunConfigurationType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, GoAppEngineRunConfigurationType.class);
+    return ConfigurationTypeUtil.findConfigurationType(GoAppEngineRunConfigurationType.class);
   }
 }

@@ -29,8 +29,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
+
+import com.intellij.util.SmartList;
 
 import java.util.List;
 
@@ -61,7 +62,7 @@ public class GoSimplifyBoolExprQuickFix extends LocalQuickFixOnPsiElement {
     boolean and = o instanceof GoAndExpr;
 
     List<GoExpression> elements = GoBoolExpressionsInspection.collect(o, and);
-    List<GoExpression> toRemove = ContainerUtil.newSmartList();
+    List<GoExpression> toRemove = new SmartList<>();
     for (int i = 0; i < elements.size(); i++) {
       GoExpression l = elements.get(i);
       if (l instanceof GoReferenceExpression &&

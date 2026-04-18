@@ -21,7 +21,6 @@ import com.goide.codeInsight.imports.GoImportPackageQuickFix;
 import com.goide.psi.GoCompositeElement;
 import com.intellij.codeInsight.daemon.ReferenceImporter;
 import com.intellij.codeInsight.daemon.impl.CollectHighlightsUtil;
-import com.intellij.codeInsight.daemon.impl.DaemonListeners;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
@@ -34,8 +33,7 @@ import java.util.List;
 public class GoReferenceImporter implements ReferenceImporter {
   @Override
   public boolean autoImportReferenceAtCursor(@NotNull Editor editor, @NotNull PsiFile file) {
-    if (!file.getViewProvider().getLanguages().contains(GoLanguage.INSTANCE) ||
-        !DaemonListeners.canChangeFileSilently(file)) {
+    if (!file.getViewProvider().getLanguages().contains(GoLanguage.INSTANCE)) {
       return false;
     }
 
@@ -59,7 +57,6 @@ public class GoReferenceImporter implements ReferenceImporter {
     return false;
   }
 
-  @Override
   public boolean autoImportReferenceAt(@NotNull Editor editor, @NotNull PsiFile file, int offset) {
     if (!file.getViewProvider().getLanguages().contains(GoLanguage.INSTANCE)) {
       return false;

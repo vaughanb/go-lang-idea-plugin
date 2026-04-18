@@ -42,9 +42,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class GoPackageUtil {
   private static final Key<CachedValue<Collection<String>>> PACKAGES_CACHE = Key.create("packages_cache");
@@ -73,7 +71,7 @@ public class GoPackageUtil {
       return Collections.emptyList();
     }
     PsiElement[] children = directory.getChildren();
-    List<GoFile> files = ContainerUtil.newArrayListWithCapacity(children.length);
+    List<GoFile> files = new ArrayList<>(children.length);
     for (PsiElement element : children) {
       if (element instanceof GoFile && (packageName == null || Comparing.equal(((GoFile)element).getPackageName(), packageName))) {
         files.add((GoFile)element);
@@ -117,7 +115,7 @@ public class GoPackageUtil {
   private static Collection<String> getAllPackagesInDirectoryInner(@NotNull PsiDirectory dir,
                                                                    @Nullable Module contextModule,
                                                                    boolean trimTestSuffices) {
-    Collection<String> set = ContainerUtil.newLinkedHashSet();
+    Collection<String> set = new LinkedHashSet<>();
     for (PsiFile file : dir.getFiles()) {
       if (file instanceof GoFile && GoPsiImplUtil.allowed(file, null, contextModule)) {
         String name = trimTestSuffices ? ((GoFile)file).getCanonicalPackageName() : ((GoFile)file).getPackageName();

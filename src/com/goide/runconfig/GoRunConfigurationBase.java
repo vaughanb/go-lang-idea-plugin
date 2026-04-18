@@ -23,6 +23,7 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.execution.configurations.*;
+import com.intellij.execution.configurations.ModuleBasedConfigurationOptions;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
@@ -41,11 +42,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class GoRunConfigurationBase<RunningState extends GoRunningState>
-  extends ModuleBasedConfiguration<GoModuleBasedConfiguration> implements RunConfigurationWithSuppressedDefaultRunAction,
-                                                                          RunConfigurationWithSuppressedDefaultDebugAction {
+  extends ModuleBasedConfiguration<GoModuleBasedConfiguration, ModuleBasedConfigurationOptions> implements RunConfigurationWithSuppressedDefaultRunAction,
+                                                                                                          RunConfigurationWithSuppressedDefaultDebugAction {
 
   private static final String WORKING_DIRECTORY_NAME = "working_directory";
   private static final String GO_PARAMETERS_NAME = "go_parameters";
@@ -55,7 +57,7 @@ public abstract class GoRunConfigurationBase<RunningState extends GoRunningState
   @NotNull private String myWorkingDirectory = "";
   @NotNull private String myGoParams = "";
   @NotNull private String myParams = "";
-  @NotNull private final Map<String, String> myCustomEnvironment = ContainerUtil.newHashMap();
+  @NotNull private final Map<String, String> myCustomEnvironment = new HashMap<>();
   private boolean myPassParentEnvironment = true;
 
   public GoRunConfigurationBase(String name, GoModuleBasedConfiguration configurationModule, ConfigurationFactory factory) {
@@ -116,7 +118,6 @@ public abstract class GoRunConfigurationBase<RunningState extends GoRunningState
   @Override
   public void writeExternal(Element element) throws WriteExternalException {
     super.writeExternal(element);
-    writeModule(element);
     addNonEmptyElement(element, WORKING_DIRECTORY_NAME, myWorkingDirectory);
     addNonEmptyElement(element, GO_PARAMETERS_NAME, myGoParams);
     addNonEmptyElement(element, PARAMETERS_NAME, myParams);
@@ -137,7 +138,6 @@ public abstract class GoRunConfigurationBase<RunningState extends GoRunningState
   @Override
   public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
-    readModule(element);
     myGoParams = StringUtil.notNullize(JDOMExternalizerUtil.getFirstChildValueAttribute(element, GO_PARAMETERS_NAME));
     myParams = StringUtil.notNullize(JDOMExternalizerUtil.getFirstChildValueAttribute(element, PARAMETERS_NAME));
 

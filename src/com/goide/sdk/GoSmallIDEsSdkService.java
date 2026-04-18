@@ -49,10 +49,7 @@ public class GoSmallIDEsSdkService extends GoSdkService {
   public String getSdkHomePath(@Nullable Module module) {
     ComponentManager holder = ObjectUtils.notNull(module, myProject);
     return CachedValuesManager.getManager(myProject).getCachedValue(holder, () -> CachedValueProvider.Result
-      .create(ApplicationManager.getApplication().runReadAction(new Computable<String>() {
-      @Nullable
-      @Override
-      public String compute() {
+      .create(ApplicationManager.getApplication().runReadAction((Computable<String>)() -> {
         LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(myProject);
         for (Library library : table.getLibraries()) {
           String libraryName = library.getName();
@@ -65,8 +62,7 @@ public class GoSmallIDEsSdkService extends GoSdkService {
           }
         }
         return null;
-      }
-    }), this));
+      }), this));
   }
 
   @Nullable

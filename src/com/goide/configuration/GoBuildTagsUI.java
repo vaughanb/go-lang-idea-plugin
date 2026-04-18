@@ -39,9 +39,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class GoBuildTagsUI implements Disposable {
   private static final String ENABLED = "Enabled";
@@ -75,7 +73,7 @@ public class GoBuildTagsUI implements Disposable {
 
     myOSCombo.setModel(createModel(GoConstants.KNOWN_OS, myDefaultOSValue));
     myArchCombo.setModel(createModel(GoConstants.KNOWN_ARCH, myDefaultArchValue));
-    myCgoComboModel = createModel(ContainerUtil.newArrayList(ENABLED, DISABLED), myDefaultCgo);
+    myCgoComboModel = createModel(Arrays.asList(ENABLED, DISABLED), myDefaultCgo);
     myCgoCombo.setModel(myCgoComboModel);
     myCompilerCombo.setModel(createModel(GoConstants.KNOWN_COMPILERS, GoBuildTargetSettings.ANY_COMPILER));
 
@@ -86,7 +84,7 @@ public class GoBuildTagsUI implements Disposable {
       String arch = expandDefault(selected(myArchCombo, myDefaultArchValue), GoUtil.systemArch());
 
       myDefaultCgo = "Default (" + cgo(GoUtil.systemCgo(os, arch)) + ")";
-      myCgoComboModel.update(ContainerUtil.newArrayList(myDefaultCgo, ENABLED, DISABLED));
+      myCgoComboModel.update(Arrays.asList(myDefaultCgo, ENABLED, DISABLED));
       myCgoComboModel.setSelectedItem(oldDefault.equals(selected) ? myDefaultCgo : selected);
     };
     myOSCombo.addActionListener(updateCgoListener);
@@ -154,7 +152,8 @@ public class GoBuildTagsUI implements Disposable {
 
   @NotNull
   private static MutableCollectionComboBoxModel<String> createModel(@NotNull Collection<String> values, @NotNull String defaultValue) {
-    List<String> items = ContainerUtil.newArrayList(defaultValue);
+    List<String> items = new ArrayList<>();
+    items.add(defaultValue);
     items.addAll(ContainerUtil.sorted(values));
     return new MutableCollectionComboBoxModel<>(items, defaultValue);
   }

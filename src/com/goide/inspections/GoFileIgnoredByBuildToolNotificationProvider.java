@@ -33,10 +33,9 @@ import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil;
+import com.intellij.lang.injection.InjectedLanguageManager;
 import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotifications;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,21 +50,21 @@ public class GoFileIgnoredByBuildToolNotificationProvider extends EditorNotifica
 
   private final Project myProject;
 
-  public GoFileIgnoredByBuildToolNotificationProvider(@NotNull Project project,
-                                                      @NotNull EditorNotifications notifications,
-                                                      @NotNull FileEditorManager fileEditorManager) {
+  public GoFileIgnoredByBuildToolNotificationProvider(@NotNull Project project) {
     myProject = project;
     MessageBusConnection connection = myProject.getMessageBus().connect(myProject);
-    connection.subscribe(GoModuleSettings.TOPIC, module -> notifications.updateAllNotifications());
-    connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener.Adapter() {
+    connection.subscribe(GoModuleSettings.TOPIC, module -> EditorNotifications.getInstance(myProject).updateAllNotifications());
+    connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
       @Override
       public void after(@NotNull List<? extends VFileEvent> events) {
         if (!myProject.isDisposed()) {
-          Set<VirtualFile> openFiles = ContainerUtil.newHashSet(fileEditorManager.getSelectedFiles());
+          FileEditorManager fem = FileEditorManager.getInstance(myProject);
+          EditorNotifications editorNotifications = EditorNotifications.getInstance(myProject);
+          Set<VirtualFile> openFiles = new java.util.HashSet<>(java.util.Arrays.asList(fem.getSelectedFiles()));
           for (VFileEvent event : events) {
             VirtualFile file = event.getFile();
             if (file != null && openFiles.contains(file)) {
-              notifications.updateNotifications(file);
+              editorNotifications.updateNotifications(file);
             }
           }
         }
@@ -80,10 +79,10 @@ public class GoFileIgnoredByBuildToolNotificationProvider extends EditorNotifica
   }
 
   @Override
-  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file, @NotNull FileEditor fileEditor) {
+  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file, @NotNull FileEditor fileEditor, @NotNull Project project) {
     if (file.getFileType() == GoFileType.INSTANCE) {
       PsiFile psiFile = PsiManager.getInstance(myProject).findFile(file);
-      if (InjectedLanguageUtil.findInjectionHost(psiFile) != null) {
+      if (psiFile != null && InjectedLanguageManager.getInstance(myProject).getInjectionHost(psiFile) != null) {
         return null;
       }
       Module module = psiFile != null ? ModuleUtilCore.findModuleForPsiElement(psiFile) : null;

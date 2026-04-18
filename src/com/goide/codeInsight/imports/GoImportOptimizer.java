@@ -27,15 +27,11 @@ import com.intellij.openapi.util.EmptyRunnable;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GoImportOptimizer implements ImportOptimizer {
   @Override
@@ -50,7 +46,7 @@ public class GoImportOptimizer implements ImportOptimizer {
       return EmptyRunnable.getInstance();
     }
     MultiMap<String, GoImportSpec> importMap = ((GoFile)file).getImportMap();
-    Set<PsiElement> importEntriesToDelete = ContainerUtil.newLinkedHashSet();
+    Set<PsiElement> importEntriesToDelete = new LinkedHashSet<>();
     Set<PsiElement> importIdentifiersToDelete = findRedundantImportIdentifiers(importMap);
 
     importEntriesToDelete.addAll(findDuplicatedEntries(importMap));
@@ -103,7 +99,7 @@ public class GoImportOptimizer implements ImportOptimizer {
 
   @NotNull
   public static Set<PsiElement> findRedundantImportIdentifiers(@NotNull MultiMap<String, GoImportSpec> importMap) {
-    Set<PsiElement> importIdentifiersToDelete = ContainerUtil.newLinkedHashSet();
+    Set<PsiElement> importIdentifiersToDelete = new LinkedHashSet<>();
     for (PsiElement importEntry : importMap.values()) {
       GoImportSpec importSpec = getImportSpec(importEntry);
       if (importSpec != null) {
@@ -124,7 +120,7 @@ public class GoImportOptimizer implements ImportOptimizer {
     result.putAllValues(importMap);
     result.remove("_"); // imports for side effects are always used
     
-    Collection<GoImportSpec> implicitImports = ContainerUtil.newArrayList(result.get("."));
+    Collection<GoImportSpec> implicitImports = new ArrayList<>(result.get("."));
     for (GoImportSpec importEntry : implicitImports) {
       GoImportSpec spec = getImportSpec(importEntry);
       if (spec != null && spec.isDot() && hasImportUsers(spec)) {
@@ -167,7 +163,7 @@ public class GoImportOptimizer implements ImportOptimizer {
         if (!(resolve instanceof PsiDirectory || resolve instanceof GoImportSpec || resolve instanceof PsiDirectoryContainer)) {
           return;
         }
-        Collection<String> qualifiersToDelete = ContainerUtil.newHashSet();
+        Collection<String> qualifiersToDelete = new HashSet<>();
         for (GoImportSpec spec : result.get(qualifierText)) {
           for (Map.Entry<String, Collection<GoImportSpec>> entry : result.entrySet()) {
             for (GoImportSpec importSpec : entry.getValue()) {
@@ -203,14 +199,14 @@ public class GoImportOptimizer implements ImportOptimizer {
 
   @NotNull
   public static Set<GoImportSpec> findDuplicatedEntries(@NotNull MultiMap<String, GoImportSpec> importMap) {
-    Set<GoImportSpec> duplicatedEntries = ContainerUtil.newLinkedHashSet();
+    Set<GoImportSpec> duplicatedEntries = new LinkedHashSet<>();
     for (Map.Entry<String, Collection<GoImportSpec>> imports : importMap.entrySet()) {
       Collection<GoImportSpec> importsWithSameName = imports.getValue();
       if (importsWithSameName.size() > 1) {
         MultiMap<String, GoImportSpec> importsWithSameString = collectImportsWithSameString(importsWithSameName);
 
         for (Map.Entry<String, Collection<GoImportSpec>> importWithSameString : importsWithSameString.entrySet()) {
-          List<GoImportSpec> duplicates = ContainerUtil.newArrayList(importWithSameString.getValue());
+          List<GoImportSpec> duplicates = new ArrayList<>(importWithSameString.getValue());
           if (duplicates.size() > 1) {
             duplicatedEntries.addAll(duplicates.subList(1, duplicates.size()));
           }

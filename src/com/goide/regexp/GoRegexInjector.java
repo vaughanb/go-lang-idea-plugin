@@ -23,12 +23,14 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 public class GoRegexInjector implements LanguageInjector {
-  private static final Set<String> REGEXP_FUNCTION_NAMES = ContainerUtil.newHashSet(
+  private static final Set<String> REGEXP_FUNCTION_NAMES = new HashSet<>(Arrays.asList(
     "Compile", "CompilePOSIX", "MustCompile", "MustCompilePOSIX", "Match", "MatchReader", "MatchString"
-  );
+  ));
 
   @Override
   public void getLanguagesToInject(@NotNull PsiLanguageInjectionHost host, @NotNull InjectedLanguagePlaces injectionPlacesRegistrar) {

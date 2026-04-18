@@ -41,6 +41,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -172,7 +173,7 @@ public class GoIntroduceVariableBase {
     }
     GoBlock context = (GoBlock)anchor.getParent();
     String name = operation.getName();
-    List<PsiElement> newOccurrences = ContainerUtil.newArrayList();
+    List<PsiElement> newOccurrences = new ArrayList<>();
     WriteCommandAction.runWriteCommandAction(project, () -> {
       GoStatement declarationStatement = GoElementFactory.createShortVarDeclarationStatement(project, name, (GoExpression)expression);
       PsiElement newLine = GoElementFactory.createNewLine(project);

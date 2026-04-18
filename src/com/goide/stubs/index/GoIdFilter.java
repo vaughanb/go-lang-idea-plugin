@@ -82,13 +82,6 @@ public class GoIdFilter extends IdFilter {
 
   @Nullable
   public static IdFilter getFilesFilter(@NotNull GlobalSearchScope scope) {
-    if (scope instanceof GlobalSearchScope.FilesScope) {
-      BitSet bitSet = new BitSet();
-      for (VirtualFile file : (GlobalSearchScope.FilesScope)scope) {
-        addToBitSet(bitSet, file);
-      }
-      return new GoIdFilter(bitSet);
-    }
     return null;
   }
 

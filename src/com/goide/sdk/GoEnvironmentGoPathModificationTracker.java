@@ -17,7 +17,7 @@
 package com.goide.sdk;
 
 import com.goide.GoEnvironmentUtil;
-import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.*;
 import com.intellij.util.SystemProperties;
@@ -26,11 +26,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class GoEnvironmentGoPathModificationTracker {
-  private final Set<String> pathsToTrack = ContainerUtil.newHashSet();
-  private final Collection<VirtualFile> goPathRoots = ContainerUtil.newLinkedHashSet();
+  private final Set<String> pathsToTrack = new HashSet<>();
+  private final Collection<VirtualFile> goPathRoots = new LinkedHashSet<>();
 
   public GoEnvironmentGoPathModificationTracker() {
     String goPath = GoEnvironmentUtil.retrieveGoPathFromEnvironment();
@@ -48,7 +50,7 @@ public class GoEnvironmentGoPathModificationTracker {
     }
     recalculateFiles();
     
-    VirtualFileManager.getInstance().addVirtualFileListener(new VirtualFileAdapter() {
+    VirtualFileManager.getInstance().addVirtualFileListener(new VirtualFileListener() {
       @Override
       public void fileCreated(@NotNull VirtualFileEvent event) {
         handleEvent(event);
@@ -78,7 +80,7 @@ public class GoEnvironmentGoPathModificationTracker {
   }
 
   private void recalculateFiles() {
-    Collection<VirtualFile> result = ContainerUtil.newLinkedHashSet();
+    Collection<VirtualFile> result = new LinkedHashSet<>();
     for (String path : pathsToTrack) {
       ContainerUtil.addIfNotNull(result, LocalFileSystem.getInstance().findFileByPath(path));
     }
@@ -95,6 +97,6 @@ public class GoEnvironmentGoPathModificationTracker {
   }
 
   public static Collection<VirtualFile> getGoEnvironmentGoPathRoots() {
-    return ServiceManager.getService(GoEnvironmentGoPathModificationTracker.class).getGoPathRoots();
+    return ApplicationManager.getApplication().getService(GoEnvironmentGoPathModificationTracker.class).getGoPathRoots();
   }
 }

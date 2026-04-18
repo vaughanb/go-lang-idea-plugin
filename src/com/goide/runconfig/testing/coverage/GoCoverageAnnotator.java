@@ -20,7 +20,6 @@ import com.intellij.coverage.BaseCoverageAnnotator;
 import com.intellij.coverage.CoverageDataManager;
 import com.intellij.coverage.CoverageSuite;
 import com.intellij.coverage.CoverageSuitesBundle;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressIndicatorProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.FileIndexFacade;
@@ -39,6 +38,7 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -46,15 +46,15 @@ public class GoCoverageAnnotator extends BaseCoverageAnnotator {
   private static final String STATEMENTS_SUFFIX = "% statements";
   private static final String FILES_SUFFIX = "% files";
 
-  private final Map<String, FileCoverageInfo> myFileCoverageInfos = ContainerUtil.newHashMap();
-  private final Map<String, DirCoverageInfo> myDirCoverageInfos = ContainerUtil.newHashMap();
+  private final Map<String, FileCoverageInfo> myFileCoverageInfos = new HashMap<>();
+  private final Map<String, DirCoverageInfo> myDirCoverageInfos = new HashMap<>();
 
   public GoCoverageAnnotator(@NotNull Project project) {
     super(project);
   }
 
   public static GoCoverageAnnotator getInstance(Project project) {
-    return ServiceManager.getService(project, GoCoverageAnnotator.class);
+    return project.getService(GoCoverageAnnotator.class);
   }
 
   @Nullable

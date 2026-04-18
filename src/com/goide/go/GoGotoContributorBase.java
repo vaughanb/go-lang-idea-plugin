@@ -55,7 +55,7 @@ public class GoGotoContributorBase<T extends GoNamedElement> implements GotoClas
   }
 
   @Override
-  public void processNames(@NotNull Processor<String> processor, @NotNull GlobalSearchScope scope, IdFilter filter) {
+  public void processNames(@NotNull Processor<? super String> processor, @NotNull GlobalSearchScope scope, IdFilter filter) {
     for (StubIndexKey<String, T> key : myIndexKeys) {
       ProgressManager.checkCanceled();
       StubIndex.getInstance().processAllKeys(key, processor, scope, filter);
@@ -64,7 +64,7 @@ public class GoGotoContributorBase<T extends GoNamedElement> implements GotoClas
 
   @Override
   public void processElementsWithName(@NotNull String s,
-                                      @NotNull Processor<NavigationItem> processor,
+                                      @NotNull Processor<? super NavigationItem> processor,
                                       @NotNull FindSymbolParameters parameters) {
     for (StubIndexKey<String, T> key : myIndexKeys) {
       ProgressManager.checkCanceled();

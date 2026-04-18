@@ -29,14 +29,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.Consumer;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class GoExcludePathLookupActionProvider implements LookupActionProvider {
   @Override
-  public void fillActions(LookupElement element, Lookup lookup, Consumer<LookupElementAction> consumer) {
+  public void fillActions(LookupElement element, Lookup lookup, Consumer<? super LookupElementAction> consumer) {
     PsiElement psiElement = element.getPsiElement();
     PsiFile file = psiElement != null && psiElement.isValid() ? psiElement.getContainingFile() : null;
     String importPath = file instanceof GoFile ? ((GoFile)file).getImportPath(false) : null;
@@ -50,7 +49,8 @@ public class GoExcludePathLookupActionProvider implements LookupActionProvider {
   }
 
   private static List<String> getPaths(String importPath) {
-    List<String> result = ContainerUtil.newArrayList(importPath);
+    List<String> result = new java.util.ArrayList<>();
+    result.add(importPath);
     int i;
     while ((i = importPath.lastIndexOf('/')) > 0) {
       importPath = importPath.substring(0, i);
@@ -82,7 +82,7 @@ public class GoExcludePathLookupActionProvider implements LookupActionProvider {
     private String myImportPath;
 
     protected ExcludePathAction(@NotNull Project project, @NotNull String importPath) {
-      super(AllIcons.Actions.Exclude, "Exclude '" + importPath + "'");
+      super(AllIcons.Actions.Cancel, "Exclude '" + importPath + "'");
       myProject = project;
       myImportPath = importPath;
     }

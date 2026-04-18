@@ -23,8 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.intellij.codeInspection.ProblemHighlightType.GENERIC_ERROR_OR_WARNING;
 
@@ -36,7 +35,7 @@ public class GoDuplicateFieldsOrMethodsInspection extends GoInspectionBase {
     return new GoVisitor() {
       @Override
       public void visitStructType(@NotNull GoStructType type) {
-        List<GoNamedElement> fields = ContainerUtil.newArrayList();
+        List<GoNamedElement> fields = new ArrayList<>();
         type.accept(new GoRecursiveVisitor() {
           @Override
           public void visitFieldDefinition(@NotNull GoFieldDefinition o) {
@@ -70,7 +69,7 @@ public class GoDuplicateFieldsOrMethodsInspection extends GoInspectionBase {
   }
 
   private static void check(@NotNull List<? extends GoNamedElement> fields, @NotNull ProblemsHolder problemsHolder, @NotNull String what) {
-    Set<String> names = ContainerUtil.newHashSet();
+    Set<String> names = new HashSet<>();
     for (GoCompositeElement field : fields) {
       if (field instanceof GoMethodSpec && ((GoMethodSpec) field).getSignature() == null) {
         // It's an embedded type, not a method or a field.

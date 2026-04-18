@@ -83,13 +83,23 @@ $ git clone https://github.com/go-lang-plugin-org/go-lang-idea-plugin.git
 Cloning into 'go-lang-idea-plugin'...
 ```
 
-On Linux/Mac OS X we use gradle as our build system. Gradle is self-installing. This one command
+On Linux/Mac OS X we use Gradle as our build system. The wrapper uses **Gradle 8.14**, which runs on a modern JDK (including **Java 24**). The plugin still targets **IntelliJ IDEA 2016.3** via `gradle.properties` (`ideaVersion`).
+
+To compile and produce the installable plugin ZIP **without** running tests:
 
 ```
 $ ./gradlew buildPlugin
 ```
 
-compiles everything, runs the tests, and builds the plugins. The output appears in `build/distributions`.
+The archive is written to **`build/distributions/`** (for example `Go-0.13.SNAPSHOT.zip`).
+
+To compile and run the unit tests (may require a setup closer to the original TeamCity/IDEA test environment; many tests assume the bundled IntelliJ 2016.3 test runtime):
+
+```
+$ ./gradlew test
+```
+
+To launch a **sandbox IntelliJ** with the plugin (`./gradlew runIde` or `make run`), the build uses **JetBrains Runtime 8** (see `runIdeJbrVersion` in `gradle.properties`). On Apple Silicon, **x64** JBR is used (Rosetta) because Java 8 runtimes are not always published for aarch64. The build also writes a small **`product-info.json`** into the downloaded SDK so `gradle-intellij-plugin` does not inject Java 9+ `--add-opens` flags (which would break that JBR).
 
 
 ### Configuring and debugging in IntelliJ

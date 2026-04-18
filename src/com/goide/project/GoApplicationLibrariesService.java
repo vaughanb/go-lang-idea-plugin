@@ -20,15 +20,13 @@ import com.goide.GoConstants;
 import com.goide.GoLibrariesState;
 import com.goide.sdk.GoSdkUtil;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
 import org.jetbrains.annotations.NotNull;
 
 @State(
   name = GoConstants.GO_LIBRARIES_SERVICE_NAME,
-  storages = @Storage(file = StoragePathMacros.APP_CONFIG + "/" + GoConstants.GO_LIBRARIES_CONFIG_FILE)
+  storages = @Storage(GoConstants.GO_LIBRARIES_CONFIG_FILE)
 )
 public class GoApplicationLibrariesService extends GoLibrariesService<GoApplicationLibrariesService.GoApplicationLibrariesState> {
   @NotNull
@@ -38,7 +36,7 @@ public class GoApplicationLibrariesService extends GoLibrariesService<GoApplicat
   }
 
   public static GoApplicationLibrariesService getInstance() {
-    return ServiceManager.getService(GoApplicationLibrariesService.class);
+    return ApplicationManager.getApplication().getService(GoApplicationLibrariesService.class);
   }
 
   public boolean isUseGoPathFromSystemEnvironment() {

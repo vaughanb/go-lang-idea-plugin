@@ -30,12 +30,12 @@ import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.MutableCollectionComboBoxModel;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ThreeState;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.Arrays;
 
 import static com.intellij.util.ThreeState.UNSURE;
 
@@ -95,7 +95,7 @@ public class GoVendoringUI implements Disposable {
       }
       myDefaultComboText = "Default for SDK (" + (GoVendoringUtil.supportsVendoringByDefault(sdkVersion) ? ENABLED : DISABLED) + ")";
       //noinspection unchecked
-      myVendoringEnabledComboModel.update(ContainerUtil.newArrayList(myDefaultComboText, ENABLED, DISABLED));
+      myVendoringEnabledComboModel.update(Arrays.asList(myDefaultComboText, ENABLED, DISABLED));
     }
   }
 

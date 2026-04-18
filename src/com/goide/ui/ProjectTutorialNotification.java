@@ -18,19 +18,19 @@ package com.goide.ui;
 
 import com.goide.GoConstants;
 import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
-import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.startup.StartupActivity;
 import org.jetbrains.annotations.NotNull;
 
-
-public class ProjectTutorialNotification implements ApplicationComponent {
+public class ProjectTutorialNotification implements StartupActivity.Background {
 
   private static final String GO_PROJECT_TUTORIAL_NOTIFICATION_SHOWN = "go.tutorial.project.notification.shown";
 
   @Override
-  public void initComponent() {
+  public void runActivity(@NotNull Project project) {
     PropertiesComponent propertiesComponent = PropertiesComponent.getInstance();
     boolean wasDisplayed;
     //noinspection SynchronizationOnLocalVariableOrMethodParameter
@@ -41,22 +41,17 @@ public class ProjectTutorialNotification implements ApplicationComponent {
 
     if (wasDisplayed) return;
 
-    Notifications.Bus.notify(GoConstants.GO_NOTIFICATION_GROUP.createNotification("Learn how to setup a new Go project",
-      "Please visit our " +
-      "<a href=\"https://github.com/go-lang-plugin-org/go-lang-idea-plugin/wiki/v1.0.0-Setup-initial-project\">wiki page<a/>" +
-      " to learn how to setup a new Go project",
-      NotificationType.INFORMATION,
-      NotificationListener.URL_OPENING_LISTENER));
-  }
-
-  @Override
-  public void disposeComponent() {
-
-  }
-
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return getClass().getName();
+    Notifications.Bus.notify(
+      NotificationGroupManager.getInstance()
+        .getNotificationGroup(GoConstants.GO_NOTIFICATION_GROUP_ID)
+        .createNotification(
+          "Learn how to setup a new Go project",
+          "Please visit our " +
+          "<a href=\"https://github.com/go-lang-plugin-org/go-lang-idea-plugin/wiki/v1.0.0-Setup-initial-project\">wiki page</a>" +
+          " to learn how to setup a new Go project",
+          NotificationType.INFORMATION
+        ),
+      project
+    );
   }
 }

@@ -23,18 +23,17 @@ import com.intellij.execution.testframework.sm.ServiceMessageBuilder;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.containers.ContainerUtil;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.intellij.openapi.util.Pair.pair;
 
 public class GocheckEventsConverter extends OutputToGeneralTestEventsConverter implements GoTestEventsConverterBase {
   private static final String FRAMEWORK_NAME = "gocheck";
@@ -87,7 +86,7 @@ public class GocheckEventsConverter extends OutputToGeneralTestEventsConverter i
 
   private static final class TestResult {
     private final Status myStatus;
-    private final Map<String, String> myAttributes = ContainerUtil.newHashMap();
+    private final Map<String, String> myAttributes = new HashMap<>();
 
     TestResult(@NotNull Status status) {
       this(status, null);
@@ -128,7 +127,7 @@ public class GocheckEventsConverter extends OutputToGeneralTestEventsConverter i
 
       case SUITE:
         if ((matcher = TEST_START.matcher(text)).matches()) {
-          myStdOut = ContainerUtil.newArrayList();
+          myStdOut = new ArrayList<>();
           myTestName = matcher.group(2);
           processTestSectionStart(myTestName, outputType, visitor);
           if (myTestName.endsWith(".SetUpSuite")) {
@@ -410,11 +409,13 @@ public class GocheckEventsConverter extends OutputToGeneralTestEventsConverter i
     // Remove the assertion error info from the test StdOut.
     myStdOut = safeSublist(myStdOut, lineNumber);
 
-    return ContainerUtil.newHashMap(pair("expected", expectedMessage.toString().trim()),
-                                    pair("actual", actualMessage.toString().trim()),
-                                    pair("type", "comparisonFailure"),
-                                    pair("message", errorMessage.toString().trim()),
-                                    pair("details", details));
+    Map<String, String> result = new HashMap<>();
+    result.put("expected", expectedMessage.toString().trim());
+    result.put("actual", actualMessage.toString().trim());
+    result.put("type", "comparisonFailure");
+    result.put("message", errorMessage.toString().trim());
+    result.put("details", details);
+    return result;
   }
 
   private static int collectErrorMessage(List<String> lines, int currentLine, Pattern continuationPattern, Pattern messagePattern,
@@ -489,7 +490,10 @@ public class GocheckEventsConverter extends OutputToGeneralTestEventsConverter i
     }
     // Remove the panic info from the test StdOut.
     myStdOut = safeSublist(myStdOut, lineNumber);
-    return ContainerUtil.newHashMap(pair("details", detailsMessage.toString()), pair("message", errorMessage));
+    Map<String, String> panicResult = new HashMap<>();
+    panicResult.put("details", detailsMessage.toString());
+    panicResult.put("message", errorMessage);
+    return panicResult;
   }
 
   @NotNull
@@ -497,7 +501,7 @@ public class GocheckEventsConverter extends OutputToGeneralTestEventsConverter i
     if (0 < until && until <= list.size() - 1) {
       return list.subList(0, until);
     }
-    return ContainerUtil.newArrayList();
+    return new ArrayList<>();
   }
 
   @NotNull

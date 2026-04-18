@@ -53,7 +53,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.intellij.util.containers.ContainerUtil.newLinkedHashSet;
 
 public class GoSdkUtil {
   private static final Pattern GO_VERSION_PATTERN = Pattern.compile("[tT]heVersion\\s*=\\s*`go([\\d.]+\\w+(\\d+)?)`");
@@ -135,7 +134,7 @@ public class GoSdkUtil {
    */
   @NotNull
   public static LinkedHashSet<VirtualFile> getSourcesPathsToLookup(@NotNull Project project, @Nullable Module module) {
-    LinkedHashSet<VirtualFile> sdkAndGoPath = newLinkedHashSet();
+    LinkedHashSet<VirtualFile> sdkAndGoPath = new LinkedHashSet<>();
     ContainerUtil.addIfNotNull(sdkAndGoPath, getSdkSrcDir(project, module));
     ContainerUtil.addAllNotNull(sdkAndGoPath, getGoPathSources(project, module));
     return sdkAndGoPath;
@@ -149,7 +148,7 @@ public class GoSdkUtil {
     if (contextFile != null) {
       Collection<VirtualFile> vendorDirectories = collectVendorDirectories(contextFile, sdkAndGoPath);
       if (!vendorDirectories.isEmpty()) {
-        LinkedHashSet<VirtualFile> result = newLinkedHashSet(vendorDirectories);
+        LinkedHashSet<VirtualFile> result = new LinkedHashSet<>(vendorDirectories);
         result.addAll(sdkAndGoPath);
         return result;
       }
@@ -163,7 +162,7 @@ public class GoSdkUtil {
     if (contextDirectory == null) {
       return Collections.emptyList();
     }
-    Collection<VirtualFile> vendorDirectories = ContainerUtil.newArrayList();
+    Collection<VirtualFile> vendorDirectories = new ArrayList<>();
     VirtualFile directory = contextDirectory;
     while (directory != null) {
       VirtualFile vendorDirectory = directory.findChild(GoConstants.VENDOR);
@@ -180,7 +179,7 @@ public class GoSdkUtil {
 
   @NotNull
   private static Collection<VirtualFile> getGoPathRoots(@NotNull Project project, @Nullable Module module) {
-    Collection<VirtualFile> roots = ContainerUtil.newArrayList();
+    Collection<VirtualFile> roots = new ArrayList<>();
     if (GoApplicationLibrariesService.getInstance().isUseGoPathFromSystemEnvironment()) {
       roots.addAll(getGoPathsRootsFromEnvironment());
     }
@@ -192,7 +191,7 @@ public class GoSdkUtil {
   public static Collection<VirtualFile> getGoPathSources(@NotNull Project project, @Nullable Module module) {
     if (module != null) {
       return CachedValuesManager.getManager(project).getCachedValue(module, () -> {
-        Collection<VirtualFile> result = newLinkedHashSet();
+        Collection<VirtualFile> result = new LinkedHashSet<>();
         Project project1 = module.getProject();
         GoSdkService sdkService = GoSdkService.getInstance(project1);
         if (sdkService.isAppEngineSdk(module)) {
@@ -217,7 +216,7 @@ public class GoSdkUtil {
 
   @NotNull
   private static Collection<VirtualFile> getGoPathBins(@NotNull Project project, @Nullable Module module) {
-    Collection<VirtualFile> result = newLinkedHashSet(ContainerUtil.mapNotNull(getGoPathRoots(project, module),
+    Collection<VirtualFile> result = new LinkedHashSet<>(ContainerUtil.mapNotNull(getGoPathRoots(project, module),
                                                                                new RetrieveSubDirectoryOrSelfFunction("bin")));
     String executableGoPath = GoSdkService.getInstance(project).getGoExecutablePath(module);
     if (executableGoPath != null) {
@@ -255,7 +254,7 @@ public class GoSdkUtil {
     if (version.startsWith("devel")) {
       return "src";
     }
-    if (version.length() > 2 && StringUtil.parseDouble(version.substring(0, 3), 1.4) < 1.4) {
+    if (VersionComparatorUtil.compare(version, "1.4") < 0) {
       return "src/pkg";
     }
     return "src";
@@ -370,15 +369,28 @@ public class GoSdkUtil {
 
   @Nullable
   public static String retrieveGoVersion(@NotNull String sdkPath) {
+    // Fast path: read VERSION file directly from disk (works regardless of VFS state)
+    String fileBasedVersion = readVersionFromDisk(sdkPath);
+    if (fileBasedVersion != null) {
+      return fileBasedVersion;
+    }
+
+    // VFS-based detection for older Go versions using zversion.go
     try {
-      VirtualFile sdkRoot = VirtualFileManager.getInstance().findFileByUrl(VfsUtilCore.pathToUrl(sdkPath));
+      VirtualFile sdkRoot = com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(sdkPath);
+      if (sdkRoot == null) {
+        sdkRoot = VirtualFileManager.getInstance().findFileByUrl(VfsUtilCore.pathToUrl(sdkPath));
+      }
       if (sdkRoot != null) {
         String cachedVersion = sdkRoot.getUserData(ZVERSION_DATA_KEY);
         if (cachedVersion != null) {
           return !cachedVersion.isEmpty() ? cachedVersion : null;
         }
 
-        VirtualFile versionFile = sdkRoot.findFileByRelativePath("src/" + GoConstants.GO_VERSION_NEW_FILE_PATH);
+        VirtualFile versionFile = sdkRoot.findFileByRelativePath("src/" + GoConstants.GO_VERSION_NEWEST_FILE_PATH);
+        if (versionFile == null) {
+          versionFile = sdkRoot.findFileByRelativePath("src/" + GoConstants.GO_VERSION_NEW_FILE_PATH);
+        }
         if (versionFile == null) {
           versionFile = sdkRoot.findFileByRelativePath("src/" + GoConstants.GO_VERSION_FILE_PATH);
         }
@@ -388,20 +400,55 @@ public class GoSdkUtil {
         if (versionFile != null) {
           String text = VfsUtilCore.loadText(versionFile);
           String version = parseGoVersion(text);
-          if (version == null) {
-            GoSdkService.LOG.debug("Cannot retrieve go version from zVersion file: " + text);
-          }
           sdkRoot.putUserData(ZVERSION_DATA_KEY, StringUtil.notNullize(version));
           return version;
-        }
-        else {
-          GoSdkService.LOG.debug("Cannot find go version file in sdk path: " + sdkPath);
         }
       }
     }
     catch (IOException e) {
       GoSdkService.LOG.debug("Cannot retrieve go version from sdk path: " + sdkPath, e);
     }
+
+    return null;
+  }
+
+  @Nullable
+  private static String readVersionFromDisk(@NotNull String sdkPath) {
+    // Try VERSION file (Go 1.21+)
+    File versionFile = new File(sdkPath, "VERSION");
+    if (versionFile.isFile()) {
+      try {
+        String text = new String(java.nio.file.Files.readAllBytes(versionFile.toPath()), java.nio.charset.StandardCharsets.UTF_8).trim();
+        for (String line : text.split("\n")) {
+          line = line.strip();
+          if (line.startsWith("go")) {
+            return line.substring(2);
+          }
+        }
+      }
+      catch (IOException ignored) {
+      }
+    }
+
+    // Try zversion.go files on disk
+    String[] zVersionPaths = {
+      "src/" + GoConstants.GO_VERSION_NEWEST_FILE_PATH,
+      "src/" + GoConstants.GO_VERSION_NEW_FILE_PATH,
+      "src/" + GoConstants.GO_VERSION_FILE_PATH,
+    };
+    for (String relPath : zVersionPaths) {
+      File f = new File(sdkPath, relPath);
+      if (f.isFile()) {
+        try {
+          String text = new String(java.nio.file.Files.readAllBytes(f.toPath()), java.nio.charset.StandardCharsets.UTF_8);
+          String version = parseGoVersion(text);
+          if (version != null) return version;
+        }
+        catch (IOException ignored) {
+        }
+      }
+    }
+
     return null;
   }
 
@@ -436,7 +483,7 @@ public class GoSdkUtil {
   private static Collection<Object> getSdkAndLibrariesCacheDependencies(@NotNull Project project,
                                                                         @Nullable Module module,
                                                                         Object... extra) {
-    Collection<Object> dependencies = ContainerUtil.newArrayList((Object[])GoLibrariesService.getModificationTrackers(project, module));
+    Collection<Object> dependencies = new ArrayList<>(Arrays.asList((Object[])GoLibrariesService.getModificationTrackers(project, module)));
     ContainerUtil.addAllNotNull(dependencies, GoSdkService.getInstance(project));
     ContainerUtil.addAllNotNull(dependencies, extra);
     return dependencies;

@@ -28,6 +28,11 @@ public abstract class GoConfigurationFactoryBase extends ConfigurationFactory {
   }
 
   @Override
+  public @org.jetbrains.annotations.NotNull String getId() {
+    return getType().getId();
+  }
+
+  @Override
   public void configureBeforeRunTaskDefaults(Key<? extends BeforeRunTask> providerID, BeforeRunTask task) {
     super.configureBeforeRunTaskDefaults(providerID, task);
     if (providerID == CompileStepBeforeRun.ID) {

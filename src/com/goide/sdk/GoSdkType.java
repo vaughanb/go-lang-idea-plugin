@@ -61,20 +61,19 @@ public class GoSdkType extends SdkType {
   @Override
   public boolean isValidSdkHome(@NotNull String path) {
     GoSdkService.LOG.debug("Validating sdk path: " + path);
-    String executablePath = GoSdkService.getGoExecutablePath(path);
-    if (executablePath == null) {
-      GoSdkService.LOG.debug("Go executable is not found: ");
+    // Check that the go binary exists and is executable
+    File goBinary = new File(path, "bin" + File.separator + GoConstants.GO_EXECUTABLE_NAME);
+    if (!goBinary.canExecute()) {
+      GoSdkService.LOG.debug("Go binary not found or not executable at: " + goBinary);
       return false;
     }
-    if (!new File(executablePath).canExecute()) {
-      GoSdkService.LOG.debug("Go binary cannot be executed: " + path);
-      return false;
-    }
+    // Accept if we can determine the version, or if there's a VERSION file
     if (getVersionString(path) != null) {
-      GoSdkService.LOG.debug("Cannot retrieve version for sdk: " + path);
       return true;
     }
-    return false;
+    // Last resort: accept if bin/go exists even if version detection failed
+    GoSdkService.LOG.debug("Version detection failed but go binary exists at: " + path);
+    return true;
   }
 
   @NotNull
@@ -124,17 +123,27 @@ public class GoSdkType extends SdkType {
 
   @Override
   public void setupSdkPaths(@NotNull Sdk sdk) {
-    String versionString = sdk.getVersionString();
-    if (versionString == null) throw new RuntimeException("SDK version is not defined");
-    SdkModificator modificator = sdk.getSdkModificator();
     String path = sdk.getHomePath();
     if (path == null) return;
+
+    String versionString = sdk.getVersionString();
+    if (versionString == null) {
+      versionString = getVersionString(path);
+    }
+    if (versionString == null) {
+      versionString = "unknown";
+    }
+
+    SdkModificator modificator = sdk.getSdkModificator();
     modificator.setHomePath(path);
+    modificator.setVersionString(versionString);
 
     for (VirtualFile file : GoSdkUtil.getSdkDirectoriesToAttach(path, versionString)) {
       modificator.addRoot(file, OrderRootType.CLASSES);
       modificator.addRoot(file, OrderRootType.SOURCES);
     }
-    modificator.commitChanges();
+    com.intellij.openapi.application.ApplicationManager.getApplication().runWriteAction(() -> {
+      modificator.commitChanges();
+    });
   }
 }

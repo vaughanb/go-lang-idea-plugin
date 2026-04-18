@@ -50,8 +50,11 @@ public abstract class GoDownloadableFileAction extends GoExternalToolsAction {
       String message = "Can't find `" + myExecutableName + "` in GOPATH. Try to invoke <a href=\"" + GO_GET_LINK + "\">go get " +
                        myExecutableName + "</a>";
       NotificationListener listener = new MyNotificationListener(project, module);
-      Notifications.Bus.notify(GoConstants.GO_NOTIFICATION_GROUP.createNotification(title, message, NotificationType.WARNING, listener),
-                               project);
+      Notification notification = com.intellij.notification.NotificationGroupManager.getInstance()
+        .getNotificationGroup(GoConstants.GO_NOTIFICATION_GROUP_ID)
+        .createNotification(title, message, NotificationType.WARNING);
+      notification.setListener(listener);
+      Notifications.Bus.notify(notification, project);
       return false;
     }
     return super.doSomething(virtualFile, module, project, title);

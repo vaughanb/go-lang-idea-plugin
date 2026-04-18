@@ -32,6 +32,7 @@ import com.intellij.util.containers.OrderedSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -170,8 +171,8 @@ public class GoReference extends GoReferenceBase<GoReferenceExpressionBase> {
     if (type instanceof GoStructType) {
       GoScopeProcessorBase delegate = createDelegate(processor);
       type.processDeclarations(delegate, ResolveState.initial(), null, myElement);
-      List<GoTypeReferenceExpression> interfaceRefs = ContainerUtil.newArrayList();
-      List<GoTypeReferenceExpression> structRefs = ContainerUtil.newArrayList();
+      List<GoTypeReferenceExpression> interfaceRefs = new ArrayList<>();
+      List<GoTypeReferenceExpression> structRefs = new ArrayList<>();
       for (GoFieldDeclaration d : ((GoStructType)type).getFieldDeclarationList()) {
         if (!processNamedElements(processor, state, d.getFieldDefinitionList(), localResolve)) return false;
         GoAnonymousFieldDefinition anon = d.getAnonymousFieldDefinition();
@@ -278,7 +279,7 @@ public class GoReference extends GoReferenceBase<GoReferenceExpressionBase> {
     List<GoExpression> list = parent.getExpressionList();
     if (list.size() > 1 && list.get(1).isEquivalentTo(another)) {
       GoExpression e = list.get(0);
-      List<GoReferenceExpression> refs = ContainerUtil.newArrayList(PsiTreeUtil.findChildrenOfType(e, GoReferenceExpression.class));
+      List<GoReferenceExpression> refs = new ArrayList<>(PsiTreeUtil.findChildrenOfType(e, GoReferenceExpression.class));
       GoExpression o = refs.size() > 1 ? refs.get(refs.size() - 1) : e;
       PsiReference ref = o.getReference();
       PsiElement resolve = ref != null ? ref.resolve() : null;

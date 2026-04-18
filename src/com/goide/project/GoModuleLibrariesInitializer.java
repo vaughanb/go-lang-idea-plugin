@@ -24,13 +24,13 @@ import com.goide.util.GoUtil;
 import com.intellij.ProjectTopics;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.progress.ProgressIndicatorProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.*;
@@ -53,10 +53,11 @@ import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.event.HyperlinkEvent;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GoModuleLibrariesInitializer implements ModuleComponent {
+public class GoModuleLibrariesInitializer implements Disposable {
   private static final String GO_LIB_NAME = "GOPATH";
   private static final String GO_LIBRARIES_NOTIFICATION_HAD_BEEN_SHOWN = "go.libraries.notification.had.been.shown";
   private static final String GO_VENDORING_NOTIFICATION_HAD_BEEN_SHOWN = "go.vendoring.notification.had.been.shown";
@@ -67,12 +68,12 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
   private final MessageBusConnection myConnection;
   private boolean myModuleInitialized;
 
-  @NotNull private final Set<VirtualFile> myLastHandledGoPathSourcesRoots = ContainerUtil.newHashSet();
-  @NotNull private final Set<VirtualFile> myLastHandledExclusions = ContainerUtil.newHashSet();
-  @NotNull private final Set<LocalFileSystem.WatchRequest> myWatchedRequests = ContainerUtil.newHashSet();
+  @NotNull private final Set<VirtualFile> myLastHandledGoPathSourcesRoots = new HashSet<>();
+  @NotNull private final Set<VirtualFile> myLastHandledExclusions = new HashSet<>();
+  @NotNull private final Set<LocalFileSystem.WatchRequest> myWatchedRequests = new HashSet<>();
 
   @NotNull private final Module myModule;
-  @NotNull private final VirtualFileAdapter myFilesListener = new VirtualFileAdapter() {
+  @NotNull private final VirtualFileListener myFilesListener = new VirtualFileListener() {
     @Override
     public void fileCreated(@NotNull VirtualFileEvent event) {
       if (GoConstants.VENDOR.equals(event.getFileName()) && event.getFile().isDirectory()) {
@@ -93,15 +94,14 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
   public GoModuleLibrariesInitializer(@NotNull Module module) {
     myModule = module;
     myAlarm = ApplicationManager.getApplication().isUnitTestMode() ? new Alarm() : new Alarm(Alarm.ThreadToUse.POOLED_THREAD, myModule);
-    myConnection = myModule.getMessageBus().connect();
+    myConnection = myModule.getProject().getMessageBus().connect();
   }
 
-  @Override
-  public void moduleAdded() {
+  public void initialize() {
     if (!myModuleInitialized) {
-      myConnection.subscribe(ProjectTopics.PROJECT_ROOTS, new ModuleRootAdapter() {
+      myConnection.subscribe(ProjectTopics.PROJECT_ROOTS, new ModuleRootListener() {
         @Override
-        public void rootsChanged(ModuleRootEvent event) {
+        public void rootsChanged(@NotNull ModuleRootEvent event) {
           scheduleUpdate();
         }
       });
@@ -183,8 +183,8 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
       libraryModel.removeRoot(root, OrderRootType.SOURCES);
     }
     for (VirtualFile libraryRoot : libraryRoots) {
-      libraryModel.addRoot(libraryRoot, OrderRootType.CLASSES); // in order to consider GOPATH as library and show it in Ext. Libraries
-      libraryModel.addRoot(libraryRoot, OrderRootType.SOURCES); // in order to find usages inside GOPATH
+      libraryModel.addRoot(libraryRoot, OrderRootType.CLASSES);
+      libraryModel.addRoot(libraryRoot, OrderRootType.SOURCES);
     }
     for (VirtualFile root : exclusions) {
       ((LibraryEx.ModifiableModelEx)libraryModel).addExcludedRoot(root.getUrl());
@@ -220,83 +220,15 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
   }
 
   private static void showNotification(@NotNull Project project) {
-    PropertiesComponent propertiesComponent = PropertiesComponent.getInstance();
-    PropertiesComponent projectPropertiesComponent = PropertiesComponent.getInstance(project);
-    boolean shownAlready;
-    //noinspection SynchronizationOnLocalVariableOrMethodParameter
-    synchronized (propertiesComponent) {
-      shownAlready = propertiesComponent.getBoolean(GO_LIBRARIES_NOTIFICATION_HAD_BEEN_SHOWN, false)
-                     || projectPropertiesComponent.getBoolean(GO_LIBRARIES_NOTIFICATION_HAD_BEEN_SHOWN, false);
-      if (!shownAlready) {
-        propertiesComponent.setValue(GO_LIBRARIES_NOTIFICATION_HAD_BEEN_SHOWN, String.valueOf(true));
-      }
-    }
-
-    if (!shownAlready) {
-      NotificationListener.Adapter notificationListener = new NotificationListener.Adapter() {
-        @Override
-        protected void hyperlinkActivated(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-          if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED && "configure".equals(event.getDescription())) {
-            GoLibrariesConfigurableProvider.showModulesConfigurable(project);
-          }
-        }
-      };
-      Notification notification = GoConstants.GO_NOTIFICATION_GROUP.createNotification("GOPATH was detected",
-                                                                                       "We've detected some libraries from your GOPATH.\n" +
-                                                                                       "You may want to add extra libraries in <a href='configure'>Go Libraries configuration</a>.",
-                                                                                       NotificationType.INFORMATION, notificationListener);
-      Notifications.Bus.notify(notification, project);
-    }
+    // GOPATH notifications are no longer relevant with Go modules
   }
 
   private void showVendoringNotification() {
-    if (!myModuleInitialized || myModule.isDisposed()) {
-      return;
-    }
-    Project project = myModule.getProject();
-    String version = GoSdkService.getInstance(project).getSdkVersion(myModule);
-    if (!GoVendoringUtil.supportsVendoring(version) || GoVendoringUtil.supportsVendoringByDefault(version)) {
-      return;
-    }
-    if (GoModuleSettings.getInstance(myModule).getVendoringEnabled() != ThreeState.UNSURE) {
-      return;
-    }
-
-    PropertiesComponent propertiesComponent = PropertiesComponent.getInstance(project);
-    boolean shownAlready;
-    //noinspection SynchronizationOnLocalVariableOrMethodParameter
-    synchronized (propertiesComponent) {
-      shownAlready = propertiesComponent.getBoolean(GO_VENDORING_NOTIFICATION_HAD_BEEN_SHOWN, false);
-      if (!shownAlready) {
-        propertiesComponent.setValue(GO_VENDORING_NOTIFICATION_HAD_BEEN_SHOWN, String.valueOf(true));
-      }
-    }
-
-    if (!shownAlready) {
-      NotificationListener.Adapter notificationListener = new NotificationListener.Adapter() {
-        @Override
-        protected void hyperlinkActivated(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-          if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED && "configure".equals(event.getDescription())) {
-            GoModuleSettings.showModulesConfigurable(project);
-          }
-        }
-      };
-      Notification notification = GoConstants.GO_NOTIFICATION_GROUP.createNotification("Vendoring usage is detected",
-                                                                                       "<p><strong>vendor</strong> directory usually means that project uses Go Vendor Experiment.</p>\n" +
-                                                                                       "<p>Selected Go SDK version support vendoring but it's disabled by default.</p>\n" +
-                                                                                       "<p>You may want to explicitly enabled Go Vendor Experiment in the <a href='configure'>project settings</a>.</p>",
-                                                                                       NotificationType.INFORMATION, notificationListener);
-      Notifications.Bus.notify(notification, project);
-    }
+    // Vendoring notifications are no longer relevant with Go modules
   }
 
   @Override
-  public void initComponent() {
-
-  }
-
-  @Override
-  public void disposeComponent() {
+  public void dispose() {
     Disposer.dispose(myConnection);
     Disposer.dispose(myAlarm);
     VirtualFileManager.getInstance().removeVirtualFileListener(myFilesListener);
@@ -306,22 +238,6 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
     myWatchedRequests.clear();
   }
 
-  @Override
-  public void projectOpened() {
-
-  }
-
-  @Override
-  public void projectClosed() {
-    disposeComponent();
-  }
-
-  @NotNull
-  @Override
-  public String getComponentName() {
-    return getClass().getName();
-  }
-
   private class UpdateRequest implements Runnable {
     @Override
     public void run() {
@@ -329,7 +245,7 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
       if (GoSdkService.getInstance(project).isGoModule(myModule)) {
         synchronized (myLastHandledGoPathSourcesRoots) {
           Collection<VirtualFile> goPathSourcesRoots = GoSdkUtil.getGoPathSources(project, myModule);
-          Set<VirtualFile> excludeRoots = ContainerUtil.newHashSet(ProjectRootManager.getInstance(project).getContentRoots());
+          Set<VirtualFile> excludeRoots = new java.util.HashSet<>(java.util.Arrays.asList(ProjectRootManager.getInstance(project).getContentRoots()));
           ProgressIndicatorProvider.checkCanceled();
           if (!myLastHandledGoPathSourcesRoots.equals(goPathSourcesRoots) || !myLastHandledExclusions.equals(excludeRoots)) {
             Collection<VirtualFile> includeRoots = gatherIncludeRoots(goPathSourcesRoots, excludeRoots);
@@ -368,7 +284,7 @@ public class GoModuleLibrariesInitializer implements ModuleComponent {
 
   @NotNull
   private static Collection<VirtualFile> gatherIncludeRoots(Collection<VirtualFile> goPathSourcesRoots, Set<VirtualFile> excludeRoots) {
-    Collection<VirtualFile> includeRoots = ContainerUtil.newHashSet();
+    Collection<VirtualFile> includeRoots = new HashSet<>();
     for (VirtualFile goPathSourcesDirectory : goPathSourcesRoots) {
       ProgressIndicatorProvider.checkCanceled();
       boolean excludedRootIsAncestor = false;

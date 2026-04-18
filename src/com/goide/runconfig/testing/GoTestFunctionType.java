@@ -28,6 +28,7 @@ public enum GoTestFunctionType {
   TEST(GoConstants.TEST_PREFIX, "T"),
   TEST_MAIN(GoConstants.TEST_PREFIX, "M"),
   BENCHMARK(GoConstants.BENCHMARK_PREFIX, "B"),
+  FUZZ(GoConstants.FUZZ_PREFIX, "F"),
   EXAMPLE(GoConstants.EXAMPLE_PREFIX, null);
 
   private final String myPrefix;

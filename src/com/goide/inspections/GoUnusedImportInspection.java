@@ -109,7 +109,7 @@ public class GoUnusedImportInspection extends GoInspectionBase {
       if (!problemsHolder.isOnTheFly() || ApplicationManager.getApplication().isUnitTestMode()) resolveAllReferences(file);
     }
     MultiMap<String, GoImportSpec> unusedImportsMap = GoImportOptimizer.filterUnusedImports(file, importMap);
-    Set<GoImportSpec> unusedImportSpecs = ContainerUtil.newHashSet(unusedImportsMap.values());
+    Set<GoImportSpec> unusedImportSpecs = new java.util.HashSet<>(unusedImportsMap.values());
     for (PsiElement importEntry : unusedImportSpecs) {
       GoImportSpec spec = GoImportOptimizer.getImportSpec(importEntry);
       if (spec != null && spec.getImportString().resolve() != null) {

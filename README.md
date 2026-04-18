@@ -1,122 +1,65 @@
 # Go plugin for IntelliJ
 
-# Deprecation notice
+Community-maintained Go language support plugin for JetBrains IDEs.
 
-This project is officially not maintained anymore. If you are using [GoLand](https://jetbrains.com/go) or [IntelliJ IDEA Ultimate](https://jetbrains.com/idea) 2017.3 or later, please report your issue at the official tracker: https://youtrack.jetbrains.com/issues/Go
+## Status
 
+This plugin has been modernized from its original 2016.3-era codebase to work with **IntelliJ IDEA 2026.1+** (build 261+). It requires **Java 21** or later.
 
-[![Build Status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:IntellijIdeaPlugins_Go_Test)/statusIcon.svg?guest=1)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=IntellijIdeaPlugins_Go_Test&guest=1) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/go-lang-plugin-org/go-lang-idea-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-## Pre-release builds
+### What's supported
 
-Please note, that the following features are available in [GoLand, JetBrains's official IDE](https://www.jetbrains.com/go/), or [JetBrains maintained plugin](https://plugins.jetbrains.com/plugin/9568-go), but **not in this plugin**:
+- Go syntax highlighting, parsing, and code completion
+- Go modules (`go.mod`, `go.sum`) file type recognition
+- Go generics (type parameters, constraints, `~` operator) - parser support
+- Modern numeric literals (binary `0b`, explicit octal `0o`, digit separators `_`)
+- Type aliases
+- Run configurations for Go applications and tests
+- Test framework support (including fuzz tests)
+- Delve debugger integration
+- Code inspections and quick-fixes
+- Code formatting with `gofmt`/`goimports`
+- Structure view, folding, navigation
+- Coverage support (optional, requires Coverage plugin)
 
-- Navigation
-  - Go to inheritor structures
-  - Go to super interfaces
-- Type-aware completion (aka Smart completion)
-- Extract function refactoring
-- Implement type
-- Inspections and quick-fixes
-    - Introduce method
-    - Introduce field
-    - Delete unused parameter
-    - Show symbol duplicates
-    - Add/delete missing/redundant expressions in case of assignment count mismatch
-    - Properly implemented Duplicated symbols inspection
-    - Recursive type detection
-    - Invalid const initialization
-- Tests and coverage
-    - Sub-tests support (runner, navigation, gutter actions)
-    - Debugging tests
-- Debugger
-    - Step out
-    - 100x faster performance
-- General
-    - Highlighting of go:generate comments
-    - Quick documentation for struct fields
-    - Semantic highlighting
-    - Parameter name hints
-    - SQL auto-injection
-    - Support for Go 1.9+
-    - Support for AppEngine 1.9.54+
+### Building
 
+```bash
+./gradlew buildPlugin
+```
 
-**Supported IDEs**
+The plugin ZIP will be in `build/distributions/`.
 
-The plugin can be installed on following IntelliJ-based:
+### Requirements
 
-- IntelliJ 2016.1+ (Ultimate or Community)
-- WebStorm 2016.1+
-- PhpStorm 2016.1+
-- PyCharm 2016.1+
-- RubyMine 2016.1+
-- CLion 2016.1+
-- Android Studio 1.2.1+
+- Gradle 9.0+ (included via wrapper)
+- Java 21+
+- IntelliJ IDEA 2026.1+ or compatible JetBrains IDE
 
-Pre-release builds are available in two forms: nightly and alphas. Alpha builds are usually released at the beginning of every week while nightly builds are released every night.
+### Configuration
 
-To use them do the following:
-
-1. Use [the instructions](https://www.jetbrains.com/idea/help/managing-enterprise-plugin-repositories.html)
-1. Paste the URL for the version you need:
- - alpha: https://plugins.jetbrains.com/plugins/alpha/5047
- - nightly: https://plugins.jetbrains.com/plugins/nightly/5047
-
-**NOTE**
-The above links are not meant to be used in browsers, so don't report issues
-about them not working or being inaccessible unless there's an error in the IDE itself.
-
-Since these are not stable releases, some things might not work as expected.
-
-### Release versions schema
-
-Bellow you can see the versions of the plugin which correspond to the versions of the 
-IntelliJ Platfom (IntelliJ IDEA, WebStorm, PyCharm etc.):
-
-| Plugin version number | Platform number |
-| ---- | --- |
-| 0.12.x | IntelliJ 2016.2 (IntelliJ IDEA 2016.2) | 
-| 0.11.x | IntelliJ 2016.1 (IntelliJ IDEA 2016.1) | 
-| 0.10.x | IntelliJ 143.1180 - 143.9999 (IntelliJ IDEA 15.0.2+) | 
-| 0.9.x | IntelliJ 141.1532 - 141.9999 (IntelliJ IDEA 14.1) |
- 
- If you are not using IntelliJ IDEA, then please check the build number of your IDE
- as that will correspond to the IntelliJ Platform version.
-
-Reporting issues is very important for us as such, please see the section below
-on how to submit a proper bug report.
+Edit `gradle.properties` to customize:
+- `platformVersion` - target IntelliJ Platform version (default: `2026.1`)
+- `localIdePath` - path to a local IDE installation (for offline development)
 
 ## FAQ
 
-Here's a list of the most frequently asked questions: [FAQ](https://github.com/go-lang-plugin-org/go-lang-idea-plugin/wiki/FAQ)
- 
+See the [FAQ](https://github.com/go-lang-plugin-org/go-lang-idea-plugin/wiki/FAQ).
+
 ## Bugs
 
-If you've found a bug, which is not a duplicate, [report it](http://github.com/go-lang-plugin-org/go-lang-idea-plugin/issues).
+If you've found a bug, [report it](http://github.com/go-lang-plugin-org/go-lang-idea-plugin/issues).
 
-When reporting a bug, please include the following:
-- IDEA version
-- OS version
-- JDK version
-- Plugin version (or commit hash, if you built the plugin yourself)
-- Detailed steps to reproduce (please include sample code)
-
-## Bumping or +1 comments
-
-Please don't comment with "bump", "+1", "same for me" or other irrelevant comments as they're useless for identifying the issue and finding the solution.
-
-Contributions are always welcome and we'll do our best to make the most of them.
+When reporting, please include:
+- IDE and plugin version
+- OS and JDK version
+- Steps to reproduce with sample code
 
 ## Contributing
 
-We encourage you to contribute to the plugin if you find any issues or missing
-functionality that you'd like to see. In order to get started, see the
-[contribution](CONTRIBUTING.md) guide.
-
-## [People who helped](https://github.com/go-lang-plugin-org/go-lang-idea-plugin/graphs/contributors)
+See the [contribution guide](CONTRIBUTING.md).
 
 ## License
 
-The Gopher icons are based on the Go mascot designed by [Renée French](http://reneefrench.blogspot.com/) and copyrighted under the [Creative Commons Attribution 3.0 license](http://creativecommons.org/licenses/by/3.0/us/).
+The Gopher icons are based on the Go mascot designed by [Renee French](http://reneefrench.blogspot.com/) and copyrighted under the [Creative Commons Attribution 3.0 license](http://creativecommons.org/licenses/by/3.0/us/).
 
-The plugin is distributed under Apache License, version 2.0. For full license terms, see [LICENCE](https://github.com/go-lang-plugin-org/go-lang-idea-plugin/blob/master/LICENCE).
+The plugin is distributed under Apache License, version 2.0. See [LICENCE](https://github.com/go-lang-plugin-org/go-lang-idea-plugin/blob/master/LICENCE).

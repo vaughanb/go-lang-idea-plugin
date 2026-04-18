@@ -25,7 +25,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiUtilBase;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,7 +42,7 @@ public class GoGenerateTestMethodActionGroup extends ActionGroup {
     if (project == null || editor == null) return AnAction.EMPTY_ARRAY;
     PsiFile file = PsiUtilBase.getPsiFileInEditor(editor, project);
 
-    ArrayList<AnAction> children = ContainerUtil.newArrayList();
+    ArrayList<AnAction> children = new ArrayList<>();
     for (GoTestFramework framework : GoTestFramework.all()) {
       if (framework.isAvailableOnFile(file)) {
         children.addAll(framework.getGenerateMethodActions());

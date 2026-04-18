@@ -29,7 +29,6 @@ import com.intellij.openapi.util.Iconable;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
-import com.intellij.psi.impl.ElementBase;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
@@ -43,7 +42,7 @@ import com.intellij.ui.RowIcon;
 import com.intellij.usageView.UsageViewUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
-import com.intellij.util.PlatformIcons;
+import com.intellij.icons.AllIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -189,8 +188,9 @@ public abstract class GoNamedElementImpl<T extends GoNamedStub<?>> extends GoStu
     else if (this instanceof GoLabelDefinition) icon = GoIcons.LABEL;
     if (icon != null) {
       if ((flags & Iconable.ICON_FLAG_VISIBILITY) != 0) {
-        RowIcon rowIcon = ElementBase.createLayeredIcon(this, icon, flags);
-        rowIcon.setIcon(isPublic() ? PlatformIcons.PUBLIC_ICON : PlatformIcons.PRIVATE_ICON, 1);
+        RowIcon rowIcon = new RowIcon(2);
+        rowIcon.setIcon(icon, 0);
+        rowIcon.setIcon(isPublic() ? AllIcons.Nodes.C_public : AllIcons.Nodes.C_private, 1);
         return rowIcon;
       }
       return icon;

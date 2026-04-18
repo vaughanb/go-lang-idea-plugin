@@ -27,7 +27,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.SmartList;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,14 +52,14 @@ public class GoPsiTreeUtil extends PsiTreeUtil {
   }
 
   @NotNull
-  public static <T extends PsiElement> List<T> getStubChildrenOfTypeAsList(@Nullable PsiElement element, @NotNull Class<T> aClass) {
+  public static <T extends PsiElement> List<T> getStubChildrenOfTypeAsList(@Nullable PsiElement element, @NotNull Class<? extends T> aClass) {
     if (element == null) return Collections.emptyList();
     StubElement<?> stub = element instanceof StubBasedPsiElement ? ((StubBasedPsiElement)element).getStub() : null;
     if (stub == null) {
       return getChildrenOfTypeAsList(element, aClass);
     }
 
-    List<T> result = new SmartList<T>();
+    List<T> result = new SmartList<>();
     for (StubElement childStub : stub.getChildrenStubs()) {
       PsiElement child = childStub.getPsi();
       if (aClass.isInstance(child)) {
@@ -137,7 +136,7 @@ public class GoPsiTreeUtil extends PsiTreeUtil {
       return PsiElement.EMPTY_ARRAY;
     }
 
-    List<PsiElement> result = ContainerUtil.newSmartList();
+    List<PsiElement> result = new SmartList<>();
     PsiElement start = topmostElementRange.first;
     while (start != null && !start.isEquivalentTo(topmostElementRange.second)) {
       if (clazz.isInstance(start)) result.add(start);

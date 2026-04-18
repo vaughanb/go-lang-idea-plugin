@@ -14,15 +14,10 @@
   ~ limitations under the License.
   -->
 
-<idea-plugin version="2" xmlns:xi="http://www.w3.org/2001/XInclude">
+<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="app-engine.xml" xpointer="xpointer(/idea-plugin/*)"/>
   <!-- plan9 assembler -->
   <xi:include href="plan9.xml" xpointer="xpointer(/idea-plugin/*)"/>
-  <module-components>
-    <component>
-      <implementation-class>com.goide.project.GoModuleLibrariesInitializer</implementation-class>
-    </component>
-  </module-components>
 
   <extensions defaultExtensionNs="com.intellij">
     <stubIndex implementation="com.goide.stubs.index.GoAllPublicNamesIndex"/>
@@ -46,11 +41,11 @@
 
     <applicationService serviceImplementation="com.goide.project.GoApplicationLibrariesService"/>
     <projectService serviceImplementation="com.goide.project.GoProjectLibrariesService"/>
-    <moduleService serviceImplementation="com.goide.project.GoModuleLibrariesService"/>
+    <projectService serviceImplementation="com.goide.project.GoModuleLibrariesService"/>
     <projectConfigurable id="go" groupId="language" provider="com.goide.configuration.GoConfigurableProvider"
                          dynamic="true" bundle="com.goide.GoBundle"/>
 
-    <moduleService serviceImplementation="com.goide.project.GoModuleSettings"/>
+    <projectService serviceImplementation="com.goide.project.GoModuleSettings"/>
     <projectService serviceImplementation="com.goide.project.GoExcludedPathsSettings"/>
     <applicationService serviceImplementation="com.goide.codeInsight.imports.GoCodeInsightSettings"/>
 
@@ -77,7 +72,12 @@
     <referenceImporter implementation="com.goide.psi.impl.imports.GoReferenceImporter"/>
 
     <lang.parserDefinition language="go" implementationClass="com.goide.GoParserDefinition"/>
-    <fileTypeFactory implementation="com.goide.GoFileTypeFactory"/>
+    <fileType name="Go" implementationClass="com.goide.GoFileType" fieldName="INSTANCE"
+              language="go" extensions="go"/>
+    <fileType name="Go Module" implementationClass="com.goide.gomod.GoModFileType" fieldName="INSTANCE"
+              language="GoMod" fileNames="go.mod"/>
+    <fileType name="Go Sum" implementationClass="com.goide.gomod.GoSumFileType" fieldName="INSTANCE"
+              fileNames="go.sum"/>
     <lang.syntaxHighlighterFactory language="go" implementationClass="com.goide.highlighting.GoSyntaxHighlighterFactory"/>
     <lang.psiStructureViewFactory language="go" implementationClass="com.goide.tree.GoStructureViewFactory"/>
     <colorSettingsPage implementation="com.goide.highlighting.GoColorsAndFontsPage"/>
@@ -125,7 +125,7 @@
 
     <lang.unwrapDescriptor language="go" implementationClass="com.goide.codeInsight.unwrap.GoUnwrapDescriptor"/>
 
-    <directoryProjectGenerator implementation="com.goide.GoProjectGenerator"/> <!-- for small IDEs-->
+    <directoryProjectGenerator implementation="com.goide.GoProjectGenerator"/>
 
     <renamePsiElementProcessor implementation="com.goide.refactor.GoRenameImportSpecProcessor"/>
 
@@ -143,7 +143,7 @@
     <sdkType implementation="com.goide.sdk.GoSdkType"/>
     <applicationService serviceImplementation="com.goide.sdk.GoEnvironmentGoPathModificationTracker"/>
     <projectService serviceInterface="com.goide.sdk.GoSdkService" serviceImplementation="com.goide.sdk.GoSmallIDEsSdkService"
-                    overrides="false"/>
+                    overrides="false" open="true"/>
     <library.presentationProvider implementation="com.goide.sdk.GoSdkLibraryPresentationProvider"/>
     <editorNotificationProvider implementation="com.goide.inspections.WrongSdkConfigurationNotificationProvider"/>
     <editorNotificationProvider implementation="com.goide.inspections.GoFileIgnoredByBuildToolNotificationProvider"/>
@@ -174,6 +174,17 @@
     <checkinHandlerFactory implementation="com.goide.actions.tool.GoFmtCheckinFactory" order="last"/>
 
     <lang.inspectionSuppressor language="go" implementationClass="com.goide.inspections.suppression.GoInspectionSuppressor"/>
+
+    <!-- notifications -->
+    <notificationGroup id="Go plugin notifications" displayType="BALLOON"/>
+    <notificationGroup id="Go Execution" displayType="TOOL_WINDOW"/>
+
+    <!-- startup activities -->
+    <postStartupActivity implementation="com.goide.ui.ProjectTutorialNotification"/>
+    <postStartupActivity implementation="com.goide.project.GoModuleLibrariesStartupActivity"/>
+
+    <!-- editor listeners -->
+    <editorFactoryListener implementation="com.goide.UpdateComponent"/>
 
     <!-- intentions -->
     <intentionAction>
@@ -227,7 +238,6 @@
     <localInspection language="go" displayName="Redundant type declaration in composite literals" groupPath="Go"
                      groupName="Declaration redundancy" enabledByDefault="true" level="WARNING"
                      implementationClass="com.goide.inspections.GoRedundantTypeDeclInCompositeLit" cleanupTool="true"/>
-    <!-- /unused inspections -->
 
     <!-- redeclare inspections -->
     <localInspection language="go" displayName="Duplicate fields and methods inspection" groupPath="Go"
@@ -245,7 +255,6 @@
     <localInspection language="go" displayName="Redeclare import as function" groupPath="Go"
                      groupName="Redeclared symbols" enabledByDefault="true" level="ERROR"
                      implementationClass="com.goide.inspections.GoRedeclareImportAsFunctionInspection"/>
-    <!-- /redeclare inspections -->
 
     <!-- code style issues -->
     <localInspection language="go" displayName="Comment of exported element starts with incorrect name" groupPath="Go"
@@ -260,7 +269,6 @@
     <localInspection language="go" displayName="Receiver has generic name" groupPath="Go"
                      groupName="Code style issues" enabledByDefault="true" level="WEAK WARNING"
                      implementationClass="com.goide.inspections.GoReceiverNamesInspection"/>
-    <!-- /code style issues -->
 
     <!-- probable bugs -->
     <localInspection language="go" displayName="Reserved word used as name" groupPath="Go"
@@ -275,7 +283,6 @@
     <localInspection language="go" displayName="Printf/Logf placeholder handler" groupPath="Go"
                      groupName="Probable bugs" enabledByDefault="true" level="WARNING"
                      implementationClass="com.goide.inspections.GoPlaceholderCountInspection"/>
-    <!-- /probable bugs -->
 
     <!-- control flow issues -->
     <localInspection language="go" displayName="Missing return at end of function" groupPath="Go"
@@ -299,7 +306,6 @@
     <localInspection language="go" displayName="Direct assignment to struct field in map" groupPath="Go"
                      groupName="Control flow issues" enabledByDefault="true" level="ERROR"
                      implementationClass="com.goide.inspections.GoDirectAssignToStructFieldInMapInspection"/>
-    <!-- /control flow issues -->
 
     <!-- general -->
     <localInspection language="go" displayName="Unresolved reference inspection" groupPath="Go"
@@ -362,11 +368,9 @@
     <localInspection language="go" displayName="Mismatched types: byte and string" groupPath="Go"
                      groupName="General" enabledByDefault="true" level="ERROR"
                      implementationClass="com.goide.inspections.GoStringAndByteTypeMismatchInspection"/>
-    <!-- /general -->
 
     <!-- color schemes -->
     <bundledColorScheme path="colorscheme/Darcula - dlsniper"/>
-    <!-- /color schemes -->
   </extensions>
   <actions>
     <action id="Go.NewGoFile" class="com.goide.actions.file.GoCreateFileAction"
@@ -400,17 +404,9 @@
     </group>
   </actions>
 
-  <application-components>
-    <component>
-      <implementation-class>com.goide.ui.ProjectTutorialNotification</implementation-class>
-    </component>
-  </application-components>
-
   <!-- GAE -->
 
   <!-- START plugin.xml of future GAE module -->
-  <!-- todo[IDEA 17] It's supposed that GAE-core module will be moved to IDEA source and bundled in IDEA 17 -->
-  <!--<id>com.intellij.appengine</id>-->
   <depends optional="true" config-file="google-app-engine-core-yaml.xml">org.jetbrains.plugins.yaml</depends>
   <extensionPoints>
     <extensionPoint name="appengine.Extension" interface="com.intellij.appengine.AppEngineExtension"/>

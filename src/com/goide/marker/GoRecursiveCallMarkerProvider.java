@@ -19,7 +19,6 @@ package com.goide.marker;
 import com.goide.psi.GoCallExpr;
 import com.goide.psi.GoFunctionOrMethodDeclaration;
 import com.goide.psi.impl.GoPsiImplUtil;
-import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.icons.AllIcons;
@@ -29,11 +28,10 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.FunctionUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -44,8 +42,8 @@ public class GoRecursiveCallMarkerProvider implements LineMarkerProvider {
   }
 
   @Override
-  public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
-    Set<Integer> lines = ContainerUtil.newHashSet();
+  public void collectSlowLineMarkers(@NotNull List<? extends PsiElement> elements, @NotNull Collection<? super LineMarkerInfo<?>> result) {
+    Set<Integer> lines = new HashSet<>();
     for (PsiElement element : elements) {
       if (element instanceof GoCallExpr) {
         PsiElement resolve = GoPsiImplUtil.resolveCall((GoCallExpr)element);
@@ -75,10 +73,10 @@ public class GoRecursiveCallMarkerProvider implements LineMarkerProvider {
       super(methodCall,
             methodCall.getTextRange(),
             AllIcons.Gutter.RecursiveMethod,
-            Pass.UPDATE_OVERRIDDEN_MARKERS,
-            FunctionUtil.constant("Recursive call"),
+            e -> "Recursive call",
             null,
-            GutterIconRenderer.Alignment.RIGHT
+            GutterIconRenderer.Alignment.RIGHT,
+            () -> "Recursive call"
       );
     }
   }

@@ -22,6 +22,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.ElementManipulators;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +72,7 @@ public class GoWordSelectioner extends AbstractWordSelectioner {
     PsiElement last = ContainerUtil.getLastItem(list);
     if (first != null && last != null) {
       TextRange range = TextRange.create(first.getTextRange().getStartOffset(), last.getTextRange().getEndOffset());
-      if (!expand) return ContainerUtil.newSmartList(range);
+      if (!expand) return new SmartList<>(range);
       return expandToWholeLine(editorText, range);
     }
     return ContainerUtil.emptyList();

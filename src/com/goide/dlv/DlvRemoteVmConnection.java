@@ -16,32 +16,96 @@
 
 package com.goide.dlv;
 
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.vfs.CharsetToolkit;
+import com.intellij.util.io.socketConnection.ConnectionStatus;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.json.JsonObjectDecoder;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.concurrency.AsyncPromise;
-import org.jetbrains.debugger.Vm;
-import org.jetbrains.debugger.connection.RemoteVmConnection;
-import org.jetbrains.io.NettyKt;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
-public class DlvRemoteVmConnection extends RemoteVmConnection {
-  @NotNull
-  @Override
-  public Bootstrap createBootstrap(@NotNull InetSocketAddress address, @NotNull AsyncPromise<Vm> vmResult) {
-    return NettyKt.oioClientBootstrap().handler(new ChannelInitializer() {
-      @Override
-      protected void initChannel(@NotNull Channel channel) throws Exception {
-        vmResult.setResult(new DlvVm(getDebugEventListener(), channel));
-      }
-    });
+public class DlvRemoteVmConnection implements Disposable {
+  private static final Logger LOG = Logger.getInstance(DlvRemoteVmConnection.class);
+
+  @Nullable private DlvVm myVm;
+  @Nullable private Channel myChannel;
+  @Nullable private EventLoopGroup myGroup;
+  @NotNull private ConnectionStatus myStatus = ConnectionStatus.NOT_CONNECTED;
+  private final CopyOnWriteArrayList<Consumer<ConnectionStatus>> myListeners = new CopyOnWriteArrayList<>();
+
+  public void open(@NotNull InetSocketAddress address) {
+    myGroup = new NioEventLoopGroup(1);
+    new Bootstrap()
+      .group(myGroup)
+      .channel(NioSocketChannel.class)
+      .handler(new ChannelInitializer<SocketChannel>() {
+        @Override
+        protected void initChannel(@NotNull SocketChannel channel) {
+          myChannel = channel;
+          myVm = new DlvVm(channel);
+          channel.pipeline().addLast(new JsonObjectDecoder(), new SimpleChannelInboundHandler<ByteBuf>() {
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
+              String text = msg.toString(CharsetToolkit.UTF8_CHARSET);
+              LOG.info("IN: " + text);
+              myVm.getCommandProcessor().processIncomingJson(new JsonReaderEx(text));
+            }
+          });
+          setStatus(ConnectionStatus.CONNECTED);
+        }
+      })
+      .connect(address)
+      .addListener((ChannelFutureListener) future -> {
+        if (!future.isSuccess()) {
+          LOG.warn("Failed to connect to " + address, future.cause());
+          setStatus(ConnectionStatus.DISCONNECTED);
+        }
+      });
+  }
+
+  private void setStatus(@NotNull ConnectionStatus status) {
+    myStatus = status;
+    for (Consumer<ConnectionStatus> listener : myListeners) {
+      listener.accept(status);
+    }
+  }
+
+  public void addListener(@NotNull Consumer<ConnectionStatus> listener) {
+    myListeners.add(listener);
   }
 
   @NotNull
+  public ConnectionStatus getStatus() {
+    return myStatus;
+  }
+
+  @Nullable
+  public DlvVm getVm() {
+    return myVm;
+  }
+
+  public void close() {
+    if (myChannel != null) {
+      myChannel.close();
+    }
+    if (myGroup != null) {
+      myGroup.shutdownGracefully();
+    }
+    setStatus(ConnectionStatus.DISCONNECTED);
+  }
+
   @Override
-  protected String connectedAddressToPresentation(@NotNull InetSocketAddress address, @NotNull Vm vm) {
-    return address.toString();
+  public void dispose() {
+    close();
   }
 }

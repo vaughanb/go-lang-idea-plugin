@@ -22,7 +22,7 @@ import com.intellij.ide.util.treeView.smartTree.ActionPresentationData;
 import com.intellij.ide.util.treeView.smartTree.Filter;
 import com.intellij.ide.util.treeView.smartTree.TreeElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.util.PlatformIcons;
+import com.intellij.icons.AllIcons;
 import org.jetbrains.annotations.NotNull;
 
 public class GoPrivateMembersFilter implements Filter {
@@ -45,7 +45,7 @@ public class GoPrivateMembersFilter implements Filter {
   @NotNull
   @Override
   public ActionPresentation getPresentation() {
-    return new ActionPresentationData(PRIVATE_MEMBERS_FILTER_TEXT, null, PlatformIcons.PRIVATE_ICON);
+    return new ActionPresentationData(PRIVATE_MEMBERS_FILTER_TEXT, null, AllIcons.Nodes.C_private);
   }
 
   @NotNull

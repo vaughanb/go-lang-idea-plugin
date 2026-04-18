@@ -75,7 +75,7 @@ public class GoAutoImportCompletionContributor extends CompletionContributor {
         GoReferenceExpressionBase qualifier = ((GoReferenceExpressionBase)parent).getQualifier();
         if (qualifier != null && qualifier.getReference() != null && qualifier.getReference().resolve() != null) return;
 
-        ArrayList<ElementProcessor> processors = ContainerUtil.newArrayList();
+        ArrayList<ElementProcessor> processors = new ArrayList<>();
         if (parent instanceof GoReferenceExpression && !GoPsiImplUtil.isUnaryBitAndExpression(parent)) {
           processors.add(new FunctionsProcessor());
           processors.add(new VariablesAndConstantsProcessor());
@@ -123,7 +123,7 @@ public class GoAutoImportCompletionContributor extends CompletionContributor {
     String prefix = matcher.getPrefix();
     boolean emptyPrefix = prefix.isEmpty();
 
-    Set<String> packagesWithAliases = ContainerUtil.newHashSet();
+    Set<String> packagesWithAliases = new HashSet<>();
     if (!emptyPrefix) {
       for (Map.Entry<String, Collection<GoImportSpec>> entry : file.getImportMap().entrySet()) {
         for (GoImportSpec spec : entry.getValue()) {
@@ -136,7 +136,7 @@ public class GoAutoImportCompletionContributor extends CompletionContributor {
       }
     }
 
-    Set<String> allNames = ContainerUtil.newTroveSet();
+    Set<String> allNames = new HashSet<>();
     StubIndex.getInstance().processAllKeys(ALL_PUBLIC_NAMES, new CancellableCollectProcessor<String>(allNames) {
       @Override
       protected boolean accept(String s) {
@@ -151,7 +151,7 @@ public class GoAutoImportCompletionContributor extends CompletionContributor {
     List<String> sorted = ContainerUtil.sorted(allNames, String.CASE_INSENSITIVE_ORDER);
     ProgressManager.checkCanceled();
 
-    LinkedHashSet<String> result = ContainerUtil.newLinkedHashSet();
+    LinkedHashSet<String> result = new LinkedHashSet<>();
     for (String name : sorted) {
       ProgressManager.checkCanceled();
       if (matcher.isStartMatch(name)) {

@@ -17,20 +17,21 @@
 package com.goide.codeInsight.imports;
 
 import com.goide.GoConstants;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.Nullable;
 
 @State(
   name = GoConstants.GO,
-  storages = @Storage(file = StoragePathMacros.APP_CONFIG + "/editor.codeinsight.xml")
+  storages = @Storage("editor.codeinsight.xml")
 )
 public class GoCodeInsightSettings implements PersistentStateComponent<GoCodeInsightSettings> {
   private boolean myShowImportPopup = true;
   private boolean myAddUnambiguousImportsOnTheFly = true;
 
   public static GoCodeInsightSettings getInstance() {
-    return ServiceManager.getService(GoCodeInsightSettings.class);
+    return ApplicationManager.getApplication().getService(GoCodeInsightSettings.class);
   }
 
   @Nullable

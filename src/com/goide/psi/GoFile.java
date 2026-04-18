@@ -49,10 +49,7 @@ import com.intellij.util.containers.MultiMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GoFile extends PsiFileBase {
 
@@ -102,7 +99,7 @@ public class GoFile extends PsiFileBase {
     }
 
     // https://code.google.com/p/go/source/browse/src/pkg/go/build/build.go?r=2449e85a115014c3d9251f86d499e5808141e6bc#790
-    Collection<String> buildFlags = ContainerUtil.newArrayList();
+    Collection<String> buildFlags = new ArrayList<>();
     int buildFlagLength = GoConstants.BUILD_FLAG.length();
     for (PsiComment comment : getCommentsToConsider(this)) {
       String commentText = StringUtil.trimStart(comment.getText(), "//").trim();
@@ -171,7 +168,7 @@ public class GoFile extends PsiFileBase {
   @NotNull
   public Map<String, GoImportSpec> getImportedPackagesMap() {
     return CachedValuesManager.getCachedValue(this, () -> {
-      Map<String, GoImportSpec> map = ContainerUtil.newHashMap();
+      Map<String, GoImportSpec> map = new HashMap<>();
       for (GoImportSpec spec : getImports()) {
         if (!spec.isForSideEffects()) {
           String importPath = spec.getPath();
@@ -191,7 +188,7 @@ public class GoFile extends PsiFileBase {
   public MultiMap<String, GoImportSpec> getImportMap() {
     return CachedValuesManager.getCachedValue(this, () -> {
       MultiMap<String, GoImportSpec> map = MultiMap.createLinked();
-      List<Object> dependencies = ContainerUtil.newArrayList(this);
+      List<Object> dependencies = new ArrayList<>(Collections.singletonList(this));
       Module module = ModuleUtilCore.findModuleForPsiElement(this);
       for (GoImportSpec spec : getImports()) {
         String alias = spec.getAlias();
@@ -232,7 +229,7 @@ public class GoFile extends PsiFileBase {
       List<GoVarDefinition> result;
       StubElement<GoFile> stub = getStub();
       if (stub != null) {
-        result = ContainerUtil.newArrayList();
+        result = new ArrayList<>();
         List<GoVarSpec> varSpecs = getChildrenByType(stub, GoTypes.VAR_SPEC, GoVarSpecStubElementType.ARRAY_FACTORY);
         for (GoVarSpec spec : varSpecs) {
           GoVarSpecStub specStub = spec.getStub();
@@ -253,7 +250,7 @@ public class GoFile extends PsiFileBase {
       StubElement<GoFile> stub = getStub();
       List<GoConstDefinition> result;
       if (stub != null) {
-        result = ContainerUtil.newArrayList();
+        result = new ArrayList<>();
         List<GoConstSpec> constSpecs = getChildrenByType(stub, GoTypes.CONST_SPEC, GoConstSpecStubElementType.ARRAY_FACTORY);
         for (GoConstSpec spec : constSpecs) {
           GoConstSpecStub specStub = spec.getStub();
@@ -276,8 +273,8 @@ public class GoFile extends PsiFileBase {
   @NotNull
   private List<GoImportSpec> calcImports() {
     GoImportList list = getImportList();
-    if (list == null) return ContainerUtil.emptyList();
-    List<GoImportSpec> result = ContainerUtil.newArrayList();
+    if (list == null) return Collections.emptyList();
+    List<GoImportSpec> result = new ArrayList<>();
     for (GoImportDeclaration declaration : list.getImportDeclarationList()) {
       result.addAll(declaration.getImportSpecList());
     }
@@ -361,7 +358,7 @@ public class GoFile extends PsiFileBase {
 
   @NotNull
   private static Collection<PsiComment> getCommentsToConsider(@NotNull GoFile file) {
-    Collection<PsiComment> commentsToConsider = ContainerUtil.newArrayList();
+    Collection<PsiComment> commentsToConsider = new ArrayList<>();
     PsiElement child = file.getFirstChild();
     int lastEmptyLineOffset = 0;
     while (child != null) {

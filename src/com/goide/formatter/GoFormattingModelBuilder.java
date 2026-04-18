@@ -34,6 +34,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -260,7 +261,7 @@ public class GoFormattingModelBuilder implements FormattingModelBuilder {
       if (mySubBlocks == null) {
         mySubBlocks = buildSubBlocks();
       }
-      return ContainerUtil.newArrayList(mySubBlocks);
+      return new ArrayList<>(mySubBlocks);
     }
 
     @NotNull
@@ -273,7 +274,7 @@ public class GoFormattingModelBuilder implements FormattingModelBuilder {
         forType = Alignment.createAlignment(true);
       }
 
-      List<Block> blocks = ContainerUtil.newArrayList();
+      List<Block> blocks = new ArrayList<>();
       for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
         IElementType childType = child.getElementType();
         if (child.getTextRange().getLength() == 0) continue;

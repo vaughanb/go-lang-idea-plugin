@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public abstract class GoLibrariesService<T extends GoLibrariesState> extends SimpleModificationTracker implements PersistentStateComponent<T> {
@@ -58,7 +59,7 @@ public abstract class GoLibrariesService<T extends GoLibrariesState> extends Sim
 
   @NotNull
   public static Collection<? extends VirtualFile> getUserDefinedLibraries(@NotNull Module module) {
-    Set<VirtualFile> result = ContainerUtil.newLinkedHashSet();
+    Set<VirtualFile> result = new LinkedHashSet<>();
     result.addAll(goRootsFromUrls(GoModuleLibrariesService.getInstance(module).getLibraryRootUrls()));
     result.addAll(getUserDefinedLibraries(module.getProject()));
     return result;
@@ -66,7 +67,7 @@ public abstract class GoLibrariesService<T extends GoLibrariesState> extends Sim
 
   @NotNull
   public static Collection<? extends VirtualFile> getUserDefinedLibraries(@NotNull Project project) {
-    Set<VirtualFile> result = ContainerUtil.newLinkedHashSet();
+    Set<VirtualFile> result = new LinkedHashSet<>();
     result.addAll(goRootsFromUrls(GoProjectLibrariesService.getInstance(project).getLibraryRootUrls()));
     result.addAll(getUserDefinedLibraries());
     return result;

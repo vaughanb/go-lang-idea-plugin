@@ -201,7 +201,7 @@ public class GoImportPackageQuickFix extends LocalQuickFixAndIntentionActionOnPs
     // autoimport on trying to fix
     if (packagesToImport.size() == 1) {
       if (GoCodeInsightSettings.getInstance().isAddUnambiguousImportsOnTheFly() && !LaterInvocator.isInModalContext() &&
-          (ApplicationManager.getApplication().isUnitTestMode() || DaemonListeners.canChangeFileSilently(file))) {
+          (ApplicationManager.getApplication().isUnitTestMode() || DaemonListeners.canChangeFileSilently(file, false, com.intellij.util.ThreeState.UNSURE))) {
         CommandProcessor.getInstance().runUndoTransparentAction(() -> perform(file, firstPackageToImport));
         return true;
       }

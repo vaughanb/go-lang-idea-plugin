@@ -69,14 +69,7 @@ public class GoIdeaSdkService extends GoSdkService {
 
   @Override
   public void chooseAndSetSdk(@Nullable Module module) {
-    Sdk projectSdk = ProjectSettingsService.getInstance(myProject).chooseAndSetSdk();
-    if (projectSdk == null && module != null) {
-      ApplicationManager.getApplication().runWriteAction(() -> {
-        if (!module.isDisposed()) {
-          ModuleRootModificationUtil.setSdkInherited(module);
-        }
-      });
-    }
+    ProjectSettingsService.getInstance(myProject).openProjectSettings();
   }
 
   @Override
